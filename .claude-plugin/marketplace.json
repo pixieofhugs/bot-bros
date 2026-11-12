@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "bot-bros",
+  "description": "A crew of plugins that keep agent-written code honest: guards, gates, budgets and bots.",
+  "owner": { "name": "pixieofhugs", "url": "https://github.com/pixieofhugs" },
+  "plugins": [
+    {
+      "name": "bros",
+      "source": "./plugins/bros",
+      "description": "/bros:setup — installs and configures the crew in a new or existing repo.",
+      "category": "productivity"
+    },
+    {
+      "name": "hush",
+      "source": "./plugins/hush",
+      "description": "Comment and PR-body budgets: agents stop narrating their code.",
+      "category": "productivity"
+    }
+  ]
+}

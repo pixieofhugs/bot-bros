@@ -1,0 +1,14 @@
+base = "main"
+
+[[check]]
+name = "api"
+paths = ["api/*"]
+run = "python3 -c 'import api.app'"
+
+[[check]]
+name = "web"
+paths = ["web/*"]
+run = "test -f web/src/app.ts"
+
+[comments]
+skip = ["api/generated/"]

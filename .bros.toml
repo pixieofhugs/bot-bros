@@ -1,0 +1,12 @@
+base = "origin/main"
+
+[[check]]
+name = "pytest"
+run = "pytest -q"
+
+[[check]]
+name = "scrub"
+run = "bros scrub"
+
+[scrub]
+deny = ["WorldZero", "World Zero", "worldzero", "Molly", "Strata", "faction", "praxis"]

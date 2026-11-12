@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "command -v bros >/dev/null || exit 0; bros comments --hook" }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "command -v bros >/dev/null || exit 0; bros pr-body" }
+        ]
+      }
+    ]
+  }
+}

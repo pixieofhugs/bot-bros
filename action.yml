@@ -1,0 +1,16 @@
+name: Bot Bros
+description: Run a bros check (comments, check, scrub, ...) in CI, pinned to this tag.
+branding: { icon: users, color: purple }
+inputs:
+  command:
+    description: The bros subcommand and its arguments, e.g. "comments origin/main".
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      with: { python-version: "3.12" }
+    - shell: bash
+      run: python -m pip install --quiet "$GITHUB_ACTION_PATH"
+    - shell: bash
+      run: bros ${{ inputs.command }}

@@ -1,0 +1,7 @@
+{
+  "name": "bros",
+  "version": "0.1.0",
+  "description": "/bros:setup — installs and configures the crew in a new or existing repo.",
+  "author": { "name": "pixieofhugs", "url": "https://github.com/pixieofhugs" },
+  "license": "MIT"
+}
