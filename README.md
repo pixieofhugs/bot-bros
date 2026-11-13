@@ -32,7 +32,7 @@ thing you might type yourself is a GitHub login.
 | **bros** | `/bros:setup` — installs and configures the rest | v0 |
 | **hush** | Comment budget + PR-body budget. Agents stop narrating. | v0 |
 | **bouncer** | Merge guard (owner's PR, green checks, a review), protected paths, safe issue-comment reading, GitHub hardening audit | v0 |
-| **foreman** | The `reviewer` agent and `bros merge`; planner → builder → merge bots, triage, git-reaper next | v0 |
+| **foreman** | The `reviewer` agent, `bros merge` and the `merge-bot` skill; planner → builder bots, triage, git-reaper next | v0 |
 | **squint** | Contrast (WCAG maths, design tokens, rendered pages), payload budget | planned |
 | **ratchet** (CLI) | Lint findings may only shrink: per file and rule, both ways, no cheating | v0 |
 | **snek / tsk** | Python / TypeScript rules and lint-on-edit | planned |
