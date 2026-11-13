@@ -2,7 +2,7 @@
 
 import sys
 
-from bros import audit, check, comments, guard, issue, prbody, scrub
+from bros import audit, check, comments, guard, issue, prbody, ratchet, scrub
 
 COMMANDS = {
     "audit": audit.main,
@@ -11,6 +11,7 @@ COMMANDS = {
     "guard": guard.main,
     "issue": issue.main,
     "pr-body": prbody.main,
+    "ratchet": ratchet.main,
     "scrub": scrub.main,
 }
 

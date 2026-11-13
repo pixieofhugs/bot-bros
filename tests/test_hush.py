@@ -4,6 +4,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from bros import comments as cb
 from bros import prbody as pb
 
@@ -44,9 +46,6 @@ def test_budget_floor_ratio_and_config():
     assert cb.Budget().allowed(50) == 10
     assert cb.Budget({"floor": 1, "ratio": 0.5}).allowed(10) == 5
     assert not cb.Budget({"skip": ["gen/"]}).checked("gen/a.py")
-
-
-import pytest
 
 
 @pytest.fixture

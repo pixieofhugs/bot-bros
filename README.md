@@ -34,6 +34,7 @@ thing you might type yourself is a GitHub login.
 | **bouncer** | Merge guard (owner's PR, green checks, a review), protected paths, safe issue-comment reading, GitHub hardening audit | v0 |
 | **foreman** | planner → builder → merge bots, reviewer, triage, git-reaper | planned |
 | **squint** | Contrast (WCAG maths, design tokens, rendered pages), payload budget | planned |
+| **ratchet** (CLI) | Lint findings may only shrink: per file and rule, both ways, no cheating | v0 |
 | **snek / tsk** | Python / TypeScript rules and lint-on-edit | planned |
 
 ## How it's built
@@ -69,12 +70,13 @@ another agent, or a person. The Claude-specific parts are thin wrappers around i
 | `bros issue <N>` | An issue with only collaborators' comments; strangers' text never reaches the agent |
 | `bros audit` | GitHub hardening check: ✓/✗/? per setting, with the command that fixes each ✗ |
 | `bros guard <paths\|issue-comments\|merge>` | Runs a bouncer hook for another harness (OpenCode, git hooks) — same file the plugin runs |
+| `bros ratchet [name] [--shrink\|--init]` | Linter findings (ruff, eslint JSON) per `path::code` may only shrink; refuses bare suppressions and rules switched off in config |
 | `bros scrub` | Fails on emails, home-directory paths, or `[scrub] deny` words in tracked files |
 
 ## Contributing
 
-`pytest -q` runs the suite, including an end-to-end run against `tests/fixture/` — a
+`bros check --all` runs everything CI runs: the suite (including an end-to-end run against `tests/fixture/` — a
 tiny Python + TypeScript project that stands in for "some other repo" so nothing
-project-specific sneaks into a rule.
+project-specific sneaks into a rule), the scrub, the ruff ratchet and the comment budget.
 
 MIT licensed.
