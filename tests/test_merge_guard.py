@@ -75,7 +75,7 @@ def test_a_pr_that_is_not_ours_is_denied(author, head_owner, review):
 
 
 def test_ownership_is_checked_before_anything_else(tmp_path):
-    """merge-bot Step 2: don't even run the other gates."""
+    """A stranger's PR: don't even run the other gates."""
     reason = reason_for(
         a_pull_request(author="driveby-dev", head_owner="driveby-dev", checks={}),
         tmp_path / "absent.md",
@@ -124,7 +124,7 @@ def test_a_missing_review_artifact_is_denied(tmp_path):
     reason = reason_for(a_pull_request(), tmp_path / "3110.md")
     assert reason is not None
     assert "CI green is not review" in reason
-    assert "`reviewer` agent for 3110" in reason
+    assert "reviewed" in reason
 
 
 def test_an_empty_review_artifact_does_not_count(tmp_path):
@@ -269,3 +269,14 @@ def test_the_hook_never_emits_allow():
             }
         )
     ) is None
+
+
+def test_bros_guard_merge_runs_this_file() -> None:
+    src = Path(__file__).resolve().parent.parent / "src"
+    out = subprocess.run(
+        [sys.executable, "-c", "from bros.cli import main; main()", "guard", "merge"],
+        input=json.dumps({"tool_name": "Bash", "tool_input": {"command": "gh pr merge --squash"}}),
+        capture_output=True, text=True, env={"PYTHONPATH": str(src)}, check=False)
+    decision = json.loads(out.stdout)["hookSpecificOutput"]
+    assert decision["permissionDecision"] == "deny"
+    assert "exactly one PR number" in decision["permissionDecisionReason"]

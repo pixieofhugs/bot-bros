@@ -140,7 +140,7 @@ def blocking_reason(
     if not review.is_file() or not review.read_text(encoding="utf-8").strip():
         return (
             f"No review artifact for PR #{number} at `{review}`. CI green is "
-            "not review. Dispatch the `reviewer` agent for {n}, or write findings — or "
+            "not review. Have the PR reviewed (foreman's `reviewer` agent, or a person) and write findings — or "
             "the words `no findings` — to that file before merging.".replace(
                 "{n}", number
             )

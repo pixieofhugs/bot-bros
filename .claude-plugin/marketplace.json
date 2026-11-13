@@ -22,7 +22,7 @@
     {
       "name": "bouncer",
       "source": "./plugins/bouncer",
-      "description": "Protected paths, safe issue-comment reading, GitHub hardening. Decides who gets in.",
+      "description": "Merge guard, protected paths, safe issue-comment reading, GitHub hardening. Decides who gets in.",
       "category": "security"
     }
   ]
