@@ -16,6 +16,18 @@ this skill leaves generic: how to shoot a UI change, which scoped writer agents 
 files, the writer rules a fix round loads, what a merge to the default branch deploys, and
 any close-out step the repo adds. No notes → skip the steps that need them and say so.
 
+**The hand-off** is a markdown file the builder writes last, once every PR in the wave is
+open. Until foreman ships a builder, write it by hand or have your own builder write it:
+
+```
+| PR | Issue | Resolution | Worktree |
+|---|---|---|---|
+| #<N> | Closes #<issue> | <one line: what kind of fix, what was checked> | <path> |
+
+**Merge order:** <PRs that must land before others, and why; "none" if disjoint>
+left open: <reason>    # only once a merge-bot has stopped on a PR
+```
+
 **Invoke:**
 
 - `/foreman:merge-bot` — the **oldest** hand-off (lowest `<n>`). Several waiting is normal
@@ -111,7 +123,8 @@ every other open PR (updating eagerly wastes a full CI cycle):
    to the reviewer. A run that will not start is not a blocker and not a pass: the PR goes
    into Step 3 as *not looked at*.
 
-   Then dispatch the **`reviewer`** agent with the PR number, and the shots directory when
+   Then dispatch the **`reviewer`** agent (`foreman:reviewer`, or the repo's own `reviewer`
+   if it ships one) with the PR number, and the shots directory when
    there is one — no `isolation`, because it writes `.claude/reviews/<N>.md` in *this*
    checkout, which is where the merge gate looks. It returns one line plus any blocking
    findings. Keep `/code-review` out of this session: loading it here costs its whole recipe
@@ -209,6 +222,10 @@ git fetch --tags origin
 git describe --tags --abbrev=0 origin/HEAD
 git rev-list --count <tag>..origin/HEAD
 ```
+
+Say those commits are deployed only if the default branch's own run above is green, and
+treat `<tag>` as the latest tag, not proof of what production runs — a tag can still be
+waiting on its approval. (No `origin/HEAD`? `git remote set-head origin -a` sets it.)
 
 Run any close-out step the merge notes add.
 
