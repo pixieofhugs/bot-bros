@@ -6,14 +6,13 @@ inputs refused before `gh` is reached.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
-
-import importlib.util
 
 HOOK_SCRIPT = Path(__file__).resolve().parent.parent / "plugins/bouncer/hooks/guard_merge.py"
 _spec = importlib.util.spec_from_file_location("guard_pr_merge", HOOK_SCRIPT)
