@@ -55,9 +55,11 @@ who knows nothing can accept every default.
 1. **Checks** — for each stack directory, the command that proves a change is good
    (propose from `package.json` scripts and pyproject tool config: e.g.
    `pytest`, `npm --prefix web run lint`, `npm --prefix web test`). These become `[[check]]`.
-2. **Crew** — which plugins to turn on. Today: `hush` (comment + PR-body budgets).
-   Recommend all.
+2. **Crew** — which plugins to turn on: `hush` (comment + PR-body budgets), `bouncer`
+   (protected paths, safe issue reading, repo hardening). Recommend all.
 3. **Generated paths** the comment budget must skip (migrations, generated API clients).
+4. **Protected paths** — `ask` (user approves each change; recommend `.github/*`) and
+   `deny` (only a human edits: guard scripts, anything they name).
 
 ## 4. Write the config
 
@@ -78,6 +80,10 @@ skip = ["api/migrations/"]    # floor = 4, ratio = 0.2 are the defaults
 
 [pr_body]
 words = 250
+
+[bouncer]
+ask = [".github/*"]
+deny = []
 ```
 
 **`.claude/settings.json`** — add, keeping everything else:
@@ -87,15 +93,21 @@ words = 250
   "extraKnownMarketplaces": {
     "bot-bros": { "source": { "source": "github", "repo": "pixieofhugs/bot-bros" } }
   },
-  "enabledPlugins": { "hush@bot-bros": true }
+  "enabledPlugins": { "hush@bot-bros": true, "bouncer@bot-bros": true },
+  "permissions": { "deny": ["Read(./.env)", "Read(./.env.*)", "Read(./**/.env)"] }
 }
 ```
+
+The `permissions.deny` lines keep secrets files out of context; drop any the repo
+doesn't have and add its own (key files, credential JSON).
 
 Committed settings switch plugins on but don't download them, so also run
 `claude plugin install <plugin>@bot-bros --scope project` for each.
 
-**CI** — `.github/workflows/bros.yml`, pinned to the latest release tag
-(`gh release view -R pixieofhugs/bot-bros --json tagName`):
+**CI** — `.github/workflows/bros.yml`, pinned by commit SHA to the latest release
+(`gh release view -R pixieofhugs/bot-bros --json tagName`, then
+`gh api repos/pixieofhugs/bot-bros/commits/<tag> --jq .sha`), with the tag as a comment
+so Dependabot can bump it:
 
 ```yaml
 name: bros
@@ -105,9 +117,9 @@ jobs:
   comments:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@<sha> # <tag>
         with: { fetch-depth: 0 }
-      - uses: pixieofhugs/bot-bros@<tag>
+      - uses: pixieofhugs/bot-bros@<sha> # <tag>
         with: { command: "comments origin/${{ github.base_ref }}" }
 ```
 
@@ -122,7 +134,22 @@ Rules and gates come from the Bot Bros plugins; project values live in `.bros.to
 Hand back with the last line of `bros check`.
 ```
 
-## 5. Prove it
+## 5. Harden GitHub
+
+Run `bros audit`. Show its list as is — ✓, ✗ with the fix, ? with why — and ask which
+✗ fixes to apply. Then:
+
+- `gh api` fixes: run the printed command.
+- **CODEOWNERS**: write `.github/CODEOWNERS` with `* @<owner>` plus a line per
+  `[bouncer]` path.
+- **Dependabot**: add a `github-actions` entry to `.github/dependabot.yml`. If the file
+  says the owner left it out on purpose, say so and leave it.
+- **SHA pins**: rewrite each flagged `uses: owner/action@tag` to
+  `owner/action@<sha> # <tag>`.
+
+Re-run `bros audit` and show what's still ✗ or ?, and why.
+
+## 6. Prove it
 
 Run `bros check --all` and `bros comments`. Show the verdict lines. Then one short
 summary: what you installed, what you wrote, what's left (if anything) and why.
