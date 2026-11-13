@@ -138,6 +138,8 @@ def test_python_suppressions_without_a_rule_fail(repo, line):
     "foo(); // eslint-disable-line -- because",
     "/* eslint-disable -- legacy */",
     "/* eslint no-console: off */",
+    '/* eslint no-console: ["off"] */',
+    "/* eslint no-console: [0] */",
 ])
 def test_eslint_suppressions_without_a_rule_fail(repo, line):
     (repo / ".bros.toml").write_text(CONFIG.format(fmt="eslint"))
@@ -174,7 +176,7 @@ def test_select_and_line_length_are_pinned(repo):
         '[tool.ruff]\nline-length = 120\n[tool.ruff.lint]\nselect = ["E"]\n')
     commit(repo)
     r = bros(repo)
-    assert r.returncode == 1 and "pins ['E', 'F']" in r.stdout and "line length 120" in r.stdout
+    assert r.returncode == 1 and "pins ['E', 'F']" in r.stdout and "line-length 120" in r.stdout
 
 
 def test_a_crashing_or_empty_linter_is_not_clean(repo):
@@ -210,3 +212,27 @@ def test_eslint_json_is_keyed_by_rule(repo):
         [{"filePath": str(repo / "lint/a.ts"), "messages": [{"ruleId": "no-console"}]}]))
     allow(repo, {"a.ts::no-console": 1})
     assert bros(repo).returncode == 0
+
+
+def test_max_line_length_is_pinned_on_its_own(repo):
+    findings(repo)
+    allow(repo, {})
+    add_to_config(repo, "line_length = 100\n")
+    (repo / "lint/ruff.toml").write_text(
+        "line-length = 100\n[lint.pycodestyle]\nmax-line-length = 1000\n")
+    commit(repo)
+    r = bros(repo)
+    assert r.returncode == 1 and "max-line-length 1000" in r.stdout
+    assert ": line-length" not in r.stdout
+
+
+def test_moving_the_allowlist_does_not_dodge_base(repo):
+    findings(repo, "E501")
+    allow(repo, {"a.py::E501": 1})
+    commit(repo)
+    (repo / ".bros.toml").write_text((repo / ".bros.toml").read_text().replace(
+        '"allow.json"', '"moved.json"'))
+    (repo / "moved.json").write_text(json.dumps({"a.py::E501": 1, "a.py::F401": 2}))
+    findings(repo, "E501", "F401", "F401")
+    r = bros(repo)
+    assert r.returncode == 1 and "a.py::F401: 2 (base allows 0)" in r.stdout

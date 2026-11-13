@@ -40,7 +40,7 @@ RUFF_SUPPRESS = re.compile(r"^#\s*(?:ruff|flake8)\s*:\s*noqa|#\s*noqa(?!\s*:)", 
 # `/* eslint rule: off */` that switches a rule off for the file.
 ESLINT_SUPPRESS = re.compile(
     r"eslint-disable(?:-next-line|-line)?(?=\s*(?:--|\*/|$))"
-    r"|/\*\s*eslint\s+[^*]*?:\s*[\"']?(?:off|0)\b"
+    r"|/\*\s*eslint\s+[^*]*?:\s*\[?\s*[\"']?(?:off|0)\b"
 )
 SOURCES = {
     "ruff": ((".py", ".pyi"), RUFF_SUPPRESS, "name the code: `# noqa: F401 - why`"),
@@ -159,10 +159,13 @@ def laundering(spec: dict, root: Path, base: Path, files: list[str]) -> list[str
         if spec.get("select") is not None and have != spec["select"]:
             found.append(f"  {name}: ruff selects {have}, .bros.toml pins {spec['select']}; "
                          "change both in one commit so the reviewer sees the rules move")
-        length = ruff.get("line-length", lint.get("pycodestyle", {}).get("max-line-length"))
-        if length is not None and length != spec.get("line_length"):
-            found.append(f"  {name}: line length {length} is not pinned in .bros.toml "
-                         f"(line_length = {spec.get('line_length')}); raising it hides E501s")
+        # E501 obeys max-line-length whenever it's set, so both keys are pinned on their own.
+        pycodestyle = lint.get("pycodestyle", {})
+        for key, length in (("line-length", ruff.get("line-length")),
+                            ("max-line-length", pycodestyle.get("max-line-length"))):
+            if length is not None and length != spec.get("line_length"):
+                found.append(f"  {name}: {key} {length} is not pinned in .bros.toml "
+                             f"(line_length = {spec.get('line_length')}); raising it hides E501s")
     return found
 
 
@@ -192,13 +195,29 @@ def run_linter(spec: dict, base: Path) -> list:
             f"that didn't run must not read as clean.\n{done.stderr.strip()[:400]}")
 
 
-def at_base(root: Path, ref: str, path: str) -> dict | None:
+def at_base(root: Path, ref: str, name: str, path: str) -> dict | None:
+    """The allowlist as base has it. Base's own .bros.toml names its path, so moving the
+    allowlist in the same PR can't dodge the comparison."""
     if git(root, "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}").returncode:
         raise RatchetError(f"bros ratchet: base `{ref}` is not in this clone, so the "
                            "allowlist can't be checked against it. Fetch it (CI: "
                            "actions/checkout with fetch-depth: 0).")
+    conf = show(root, ref, ".bros.toml")
+    if conf is not None:
+        old = {s.get("name"): s for s in tomllib.loads(conf).get("ratchet", [])}
+        path = old.get(name, {}).get("allowlist", path)
+    text = show(root, ref, path)
+    return None if text is None else json.loads(text)
+
+
+def show(root: Path, ref: str, path: str) -> str | None:
+    """A file's text at ref; None only when it isn't there. Any other git failure is loud."""
+    if git(root, "cat-file", "-e", f"{ref}:{path}").returncode:
+        return None
     shown = git(root, "show", f"{ref}:{path}")
-    return json.loads(shown.stdout) if shown.returncode == 0 else None
+    if shown.returncode:
+        raise RatchetError(f"bros ratchet: git show {ref}:{path} failed: {shown.stderr.strip()}")
+    return shown.stdout
 
 
 def main(args: list[str]) -> int:
@@ -218,7 +237,7 @@ def main(args: list[str]) -> int:
             raise RatchetError(f"bros ratchet: unknown format `{spec['format']}` (ruff | eslint)")
         base = root / spec.get("dir", ".")
         allowlist = root / spec["allowlist"]
-        before = at_base(root, ref, spec["allowlist"])
+        before = at_base(root, ref, name, spec["allowlist"])
         actual = keys(run_linter(spec, base), spec["format"], base)
         if not allowlist.exists():
             if before is not None:
