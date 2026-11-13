@@ -111,3 +111,13 @@ def test_a_missing_allowlist_is_an_error_until_baselined(repo):
     assert bros(repo, "--init").returncode == 0
     assert json.loads((repo / "allow.json").read_text()) == {"a.py::E501": 1, "a.py::F401": 1}
     assert "baselined" not in bros(repo, "--init").stdout
+
+
+def test_narrowing_the_selected_rules_fails(repo):
+    findings(repo)
+    allow(repo, {})
+    (repo / ".bros.toml").write_text((repo / ".bros.toml").read_text() + 'select = ["E", "F"]\n')
+    (repo / "lint/pyproject.toml").write_text('[tool.ruff.lint]\nselect = ["E"]\n')
+    subprocess.run(["git", "add", "."], cwd=repo, check=True)
+    r = bros(repo)
+    assert r.returncode == 1 and "pins ['E', 'F']" in r.stdout

@@ -21,6 +21,7 @@ name = "ruff"
 format = "ruff"
 run = "{python} -m ruff check --no-cache --output-format json ."
 requires = "ruff==0.16.4"
+select = ["E", "F", "I"]
 allowlist = "ruff-allowlist.json"
 
 [scrub]

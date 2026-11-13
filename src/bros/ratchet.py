@@ -13,6 +13,7 @@ the cheap ways to fake progress: bare suppressions and rules switched off in con
     dir = "backend"                      # run here; keys are relative to it
     run = "{python} -m ruff check --no-cache --output-format json ."
     requires = "ruff==0.16.4"            # optional: counts depend on the version
+    select = ["E", "F", "I"]             # optional, ruff: narrowing the rules is not progress
     allowlist = "backend/ruff-allowlist.json"
 """
 
@@ -69,7 +70,7 @@ def compare(actual: Counter, allowed: dict) -> tuple[list[str], list[str]]:
     return regressed, stale
 
 
-def laundering(fmt: str, base: Path, files: list[str]) -> list[str]:
+def laundering(fmt: str, base: Path, files: list[str], select=None) -> list[str]:
     """Ways to make the number drop without fixing anything."""
     pattern, glob, fix = BARE[fmt]
     found = []
@@ -93,6 +94,10 @@ def laundering(fmt: str, base: Path, files: list[str]) -> list[str]:
             for table in (ruff, ruff.get("lint", {})):
                 found += [f"  {name}: `{k}` switches rules or files off wholesale; "
                           "grandfather in the allowlist instead" for k in RUFF_OFF if k in table]
+            have = ruff.get("lint", {}).get("select", ruff.get("select"))
+            if select is not None and have != select:
+                found += [f"  {name}: ruff selects {have}, .bros.toml pins {select}; change "
+                          "both in one commit so the reviewer sees the rules move"]
     return found
 
 
@@ -155,7 +160,7 @@ def main(args: list[str]) -> int:
             print(f"{name}: baselined {sum(actual.values())} findings in {spec['allowlist']}")
         allowed = json.loads(allowlist.read_text())
         regressed, stale = compare(actual, allowed)
-        cheats = laundering(spec["format"], base, tracked(base))
+        cheats = laundering(spec["format"], base, tracked(base), spec.get("select"))
         if stale and "--shrink" in args:
             shrunk = {k: min(n, actual[k]) for k, n in sorted(allowed.items()) if actual.get(k)}
             allowlist.write_text(json.dumps(shrunk, indent=2) + "\n")
