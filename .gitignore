@@ -2,3 +2,5 @@ __pycache__/
 *.egg-info/
 .venv/
 dist/
+/.claude/*
+!/.claude/settings.json

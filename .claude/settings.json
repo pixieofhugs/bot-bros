@@ -1,0 +1,6 @@
+{
+  "extraKnownMarketplaces": {
+    "bot-bros": { "source": { "source": "github", "repo": "pixieofhugs/bot-bros" } }
+  },
+  "enabledPlugins": { "bouncer@bot-bros": true, "hush@bot-bros": true }
+}
