@@ -131,6 +131,7 @@ def test_a_pr_goes_after_what_its_handoff_names_and_only_then(monkeypatch, tmp_p
         "| #7 | Closes #1 | fix | wt |\n"
         "PR #7 after: #5, #6\n"
         "PR #8 after: #9\n"
+        "PR #70 after: #9\n"
     )
 
     state = {"5": "OPEN", "6": "MERGED"}
@@ -145,3 +146,33 @@ def test_a_pr_goes_after_what_its_handoff_names_and_only_then(monkeypatch, tmp_p
 
     state["5"] = "MERGED"
     assert merge_pr.land("7")[0] == merge_pr.MERGED
+
+
+def _after(monkeypatch, tmp_path, handoff, states):
+    reviews = tmp_path / ".claude" / "reviews"
+    reviews.mkdir(parents=True)
+    (reviews / "7.md").write_text(CLEAN_REVIEW)
+    (reviews / "HANDOFF-wave.md").write_text(handoff)
+    _wire(monkeypatch, tmp_path, decide=lambda p: None)
+    view = merge_pr._view
+    monkeypatch.setattr(merge_pr, "_view", lambda n: {**view(n), "state": states.get(n, "OPEN")})
+    return merge_pr.land("7")
+
+
+def test_a_closed_predecessor_blocks_and_says_it_will_never_land(monkeypatch, tmp_path):
+    code, message = _after(monkeypatch, tmp_path, "PR #7 after: #5\n", {"5": "CLOSED"})
+    assert code == merge_pr.BLOCKED and "closed unmerged" in message and "remove #5" in message
+
+
+def test_two_unmerged_predecessors_read_in_the_plural(monkeypatch, tmp_path):
+    _, message = _after(monkeypatch, tmp_path, "PR #7 after: #5, #6\n", {})
+    assert "#5, #6" in message and "are not merged" in message
+
+
+def test_an_after_line_that_does_not_parse_blocks_loudly(monkeypatch, tmp_path):
+    for line in ("PR #7 lands first; PR #9 after: #7", "**Merge order:** #7 after: #5",
+                 "PR #7 after: #7"):  # fmt: skip
+        sub = tmp_path / str(abs(hash(line)))
+        sub.mkdir()
+        code, message = _after(monkeypatch, sub, line + "\n", {})
+        assert code == merge_pr.BLOCKED and line in message
