@@ -24,6 +24,12 @@
       "source": "./plugins/bouncer",
       "description": "Merge guard, protected paths, safe issue-comment reading, GitHub hardening. Decides who gets in.",
       "category": "security"
+    },
+    {
+      "name": "foreman",
+      "source": "./plugins/foreman",
+      "description": "Runs the crew: review, merge and (soon) the planner and builder bots.",
+      "category": "productivity"
     }
   ]
 }
