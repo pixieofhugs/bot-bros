@@ -29,6 +29,8 @@ PR #<N> after: #<M>[, #<K>]    # optional, one line per PR that must wait; `bros
 left open: <reason>    # only once a merge-bot has stopped on a PR
 ```
 
+Write the `after:` line exactly this form, with a trailing note only as `# comment`; anything else on a `PR #<N> after:` line refuses that PR's merge.
+
 **Invoke:**
 
 - `/foreman:merge-bot` — the **oldest** hand-off (lowest `<n>`). Several waiting is normal

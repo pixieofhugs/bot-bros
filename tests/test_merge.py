@@ -170,9 +170,19 @@ def test_two_unmerged_predecessors_read_in_the_plural(monkeypatch, tmp_path):
 
 
 def test_an_after_line_that_does_not_parse_blocks_loudly(monkeypatch, tmp_path):
-    for line in ("PR #7 lands first; PR #9 after: #7", "**Merge order:** #7 after: #5",
-                 "PR #7 after: #7"):  # fmt: skip
+    for line in ("PR #7 lands first; PR #9 after: #7", "PR #7 after: #7",
+                 "PR #7 after: #5 (shares a migration)"):  # fmt: skip
         sub = tmp_path / str(abs(hash(line)))
         sub.mkdir()
         code, message = _after(monkeypatch, sub, line + "\n", {})
         assert code == merge_pr.BLOCKED and line in message
+
+
+def test_after_lines_about_other_prs_or_prose_never_block(monkeypatch, tmp_path):
+    handoff = (
+        "Merge order: land the schema after: the API\n"
+        "PR #9 after: #9\n"
+        "PR #<N> after: #<M>[, #<K>]\n"
+        "PR #70 after: nonsense\n"
+    )
+    assert _after(monkeypatch, tmp_path, handoff, {})[0] == merge_pr.MERGED

@@ -203,21 +203,21 @@ def project_root() -> Path:
 def unmerged_predecessors(number: str, root: Path) -> list[tuple[str, str]]:
     """`(pr, state)` for each PR a hand-off says `number` goes `after:` that is not merged.
 
-    Raises on any hand-off line that mentions `after:` but is not that form.
+    Raises on a line about `number` that mentions `after:` but is not that form.
     """
     waits: list[str] = []
     for handoff in sorted((root / guard.REVIEW_DIR).glob("HANDOFF-*.md")):
         for line in handoff.read_text(encoding="utf-8").splitlines():
-            if "after:" not in line:
+            if "after:" not in line or not re.search(rf"\bPR #{number}\b", line):
                 continue
             found = AFTER.match(line)
             named = re.findall(r"\d+", found[2]) if found else []
-            if not found or found[1] in named:
+            if not found or found[1] != number or number in named:
                 raise RuntimeError(
-                    f"{handoff.name} has an `after:` line that is not `PR #N after: #M`: {line!r}"
+                    f"{handoff.name} has an `after:` line for PR #{number} that is not "
+                    f"`PR #{number} after: #M`: {line!r}"
                 )
-            if found[1] == number:
-                waits += named
+            waits += named
     states = {m: _view(m)["state"] for m in dict.fromkeys(waits)}
     return [(m, state) for m, state in states.items() if state != "MERGED"]
 
