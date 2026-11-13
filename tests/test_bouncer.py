@@ -99,3 +99,12 @@ def test_audit_pipe_quotes_its_json():
     assert cmd.startswith("echo ") and cmd.endswith("repos/o/r --input -")
     assert json.loads(subprocess.run(cmd.split(" | ")[0], shell=True, capture_output=True,
                                      text=True).stdout) == {"a": "it's"}
+
+
+def test_bros_guard_runs_the_plugin_hook(root):
+    src = Path(__file__).parent.parent / "src"
+    out = subprocess.run(
+        [sys.executable, "-c", "from bros.cli import main; main()", "guard", "paths"],
+        input=json.dumps(edit(".github/x.yml")), text=True, capture_output=True,
+        env={"CLAUDE_PROJECT_DIR": str(root), "PYTHONPATH": str(src)})
+    assert json.loads(out.stdout)["hookSpecificOutput"]["permissionDecision"] == "ask"

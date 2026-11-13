@@ -69,6 +69,7 @@ another agent, or a person. The Claude-specific parts are thin wrappers around i
 | `bros pr-body` | Warns when a PR body passes `[pr_body] words` |
 | `bros issue <N>` | An issue with only collaborators' comments; strangers' text never reaches the agent |
 | `bros audit` | GitHub hardening check: ✓/✗/? per setting, with the command that fixes each ✗ |
+| `bros guard <paths\|issue-comments>` | Runs a bouncer hook for another harness (OpenCode, git hooks) — same file the plugin runs |
 | `bros scrub` | Fails on emails, home-directory paths, or `[scrub] deny` words in tracked files |
 
 ## Contributing

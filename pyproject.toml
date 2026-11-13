@@ -1,6 +1,6 @@
 [project]
 name = "bot-bros"
-version = "0.2.0"
+version = "0.2.1"
 description = "A crew of Claude Code plugins and one CLI that keep agent-written code honest."
 readme = "README.md"
 license = "MIT"
@@ -16,6 +16,9 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/bros"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"plugins/bouncer/hooks" = "bros/_hooks"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

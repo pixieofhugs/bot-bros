@@ -2,12 +2,13 @@
 
 import sys
 
-from bros import audit, check, comments, issue, prbody, scrub
+from bros import audit, check, comments, guard, issue, prbody, scrub
 
 COMMANDS = {
     "audit": audit.main,
     "check": check.main,
     "comments": comments.main,
+    "guard": guard.main,
     "issue": issue.main,
     "pr-body": prbody.main,
     "scrub": scrub.main,
