@@ -88,14 +88,28 @@ def test_scrub_catches_a_leak(repo):
     assert email in result.stdout and home in result.stdout
 
 
-def test_scrub_refuses_hashed_words_without_naming_them(repo):
+@pytest.mark.parametrize("text", [
+    "by Some Name", "class SomeName:", "x = 'somename'", "SOME_NAME = 1", "some-name",
+    "somenames", "SomeNamePlayground", "SOMENAMEs", "the Some Name's",
+])
+def test_scrub_refuses_hashed_words_without_naming_them(repo, text):
+    from bros.scrub import digest
+    assert digest("Some Name") == digest("somename") == digest("SOME_NAME")
+    (repo / ".bros.toml").write_text(
+        (repo / ".bros.toml").read_text() + f'\n[scrub]\ndeny_sha256 = ["{digest("Some Name")}"]\n')
+    commit(repo, "api/app.py", "ok = 1\n" + text + "\n")
+    result = bros(repo, "scrub")
+    assert result.returncode == 1 and "line 2: a denied word" in result.stdout
+    assert "some" not in result.stdout.lower()
+
+
+def test_scrub_passes_near_misses_and_rejects_bad_hashes(repo):
     from bros.scrub import digest
     (repo / ".bros.toml").write_text(
         (repo / ".bros.toml").read_text() + f'\n[scrub]\ndeny_sha256 = ["{digest("somename")}"]\n')
-    for text in ("by Some Name", "class SomeName:", "x = 'somename'"):
-        commit(repo, "api/app.py", text + "\n")
-        result = bros(repo, "scrub")
-        assert result.returncode == 1 and "a denied word (so…)" in result.stdout
-        assert "somename" not in result.stdout.lower()
-    commit(repo, "api/app.py", "some other name\n")
+    commit(repo, "api/app.py", "some other name\nsome\nname\n")
     assert bros(repo, "scrub").returncode == 0
+    (repo / ".bros.toml").write_text(
+        (repo / ".bros.toml").read_text().replace(digest("somename"), "not-a-hash"))
+    assert "not SHA-256" in bros(repo, "scrub").stderr
+    assert bros(repo, "scrub", "--hash").returncode == 2
