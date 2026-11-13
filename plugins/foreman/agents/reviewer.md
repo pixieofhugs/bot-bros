@@ -54,6 +54,9 @@ you could not run is written as "not run" — never as clean.
 spec by run id. None cited, or red for that spec, is BLOCKING. Judge the touched specs, not
 the run's overall colour, when the suite's baseline is known red.
 
+**CI runs.** When the review cites a CI run, confirm `gh run view <id> --json headSha` equals
+the `headRefOid` you read. If it does not, say CI was not seen at that head.
+
 ## Record it
 
 Write `.claude/reviews/<N>.md`. **Line 1 is a fixed verdict line, and it is the only line

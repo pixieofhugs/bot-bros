@@ -60,6 +60,9 @@ POLL_RETRIES = 3
 #: Review line 1, written by foreman's `reviewer` agent; extra `k=v` fields ignored.
 VERDICT = re.compile(r"^PR #(\d+) @ ([0-9a-f]{7,40}) — VERDICT:((?: [a-z][a-z-]*=\d+)+)\s*$")
 
+#: Hand-off line `PR #N after: #M[, #K]`: N waits for M and K to merge.
+AFTER = re.compile(r"^\W*PR #(\d+)\s+after:\s*((?:[ ,]*#\d+)+)\s*(?:#.*)?$")
+
 MERGED, BLOCKED, NEEDS_REVIEW = 0, 1, 3
 
 
@@ -197,6 +200,28 @@ def project_root() -> Path:
     return root
 
 
+def unmerged_predecessors(number: str, root: Path) -> list[tuple[str, str]]:
+    """`(pr, state)` for each PR a hand-off says `number` goes `after:` that is not merged.
+
+    Raises on a line about `number` that mentions `after:` but is not that form.
+    """
+    waits: list[str] = []
+    for handoff in sorted((root / guard.REVIEW_DIR).glob("HANDOFF-*.md")):
+        for line in handoff.read_text(encoding="utf-8").splitlines():
+            if "after:" not in line or not re.search(rf"\bPR #{number}\b", line):
+                continue
+            found = AFTER.match(line)
+            named = re.findall(r"\d+", found[2]) if found else []
+            if not found or found[1] != number or number in named:
+                raise RuntimeError(
+                    f"{handoff.name} has an `after:` line for PR #{number} that is not "
+                    f"`PR #{number} after: #M`: {line!r}"
+                )
+            waits += named
+    states = {m: _view(m)["state"] for m in dict.fromkeys(waits)}
+    return [(m, state) for m, state in states.items() if state != "MERGED"]
+
+
 def land(number: str, say=lambda _: None) -> tuple[int, str]:
     root = project_root()
     review = root / guard.REVIEW_DIR / f"{number}.md"
@@ -206,6 +231,23 @@ def land(number: str, say=lambda _: None) -> tuple[int, str]:
         return BLOCKED, guard.blocking_reason(number, pull_request, owner, [], review) or ""
 
     view = _view(number)
+    try:
+        waiting = unmerged_predecessors(number, root) if view["state"] == "OPEN" else []
+    except RuntimeError as error:
+        return BLOCKED, f"PR #{number}: {error}"
+    for m, state in waiting:
+        if state == "CLOSED":
+            return BLOCKED, (
+                f"PR #{number} goes after #{m}, which is closed unmerged and will never land; "
+                f"if #{number} no longer needs it, remove #{m} from the hand-off's `after:` line."
+            )
+    if waiting:
+        names = ", ".join(f"#{m}" for m, _ in waiting)
+        verb = "are" if len(waiting) > 1 else "is"
+        return BLOCKED, (
+            f"PR #{number} goes after {names} (the hand-off's `after:`), which {verb} not "
+            "merged. Land that first."
+        )
     if view["state"] == "MERGED":
         return MERGED, f"PR #{number} is already merged."
     if view["state"] != "OPEN":
