@@ -14,7 +14,11 @@ runs:
   steps:
     - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
       with: { python-version: "3.12" }
+    # Inputs reach the shell through env, never pasted into the script: a value with
+    # `$(...)` or `>` in it stays data. Word splitting is wanted (several args); globbing is off.
     - shell: bash
-      run: python -m pip install --quiet "$GITHUB_ACTION_PATH" ${{ inputs.install }}
+      env: { BROS_INSTALL: "${{ inputs.install }}" }
+      run: set -f; python -m pip install --quiet "$GITHUB_ACTION_PATH" $BROS_INSTALL
     - shell: bash
-      run: bros ${{ inputs.command }}
+      env: { BROS_COMMAND: "${{ inputs.command }}" }
+      run: set -f; bros $BROS_COMMAND

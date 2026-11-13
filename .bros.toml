@@ -22,6 +22,7 @@ format = "ruff"
 run = "{python} -m ruff check --no-cache --output-format json ."
 requires = "ruff==0.16.4"
 select = ["E", "F", "I"]
+line_length = 100
 allowlist = "ruff-allowlist.json"
 
 [scrub]
