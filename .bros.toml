@@ -10,3 +10,8 @@ run = "bros scrub"
 
 [scrub]
 deny = ["WorldZero", "World Zero", "worldzero", "Molly", "Strata", "faction", "praxis"]
+
+[bouncer]
+ask = [".github/*"]
+# Human-only: no agent edits the merge guard or its sibling guards, text or logic.
+deny = ["plugins/bouncer/hooks/*"]

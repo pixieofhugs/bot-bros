@@ -8,7 +8,8 @@ import runpy
 import sys
 from pathlib import Path
 
-NAMES = {"paths": "guard_paths.py", "issue-comments": "guard_issue_comments.py"}
+NAMES = {"paths": "guard_paths.py", "issue-comments": "guard_issue_comments.py",
+         "merge": "guard_merge.py"}
 
 
 def hooks_dir() -> Path:
