@@ -26,7 +26,14 @@ line_length = 100
 allowlist = "ruff-allowlist.json"
 
 [scrub]
-deny = ["WorldZero", "World Zero", "worldzero", "Molly", "Strata", "faction", "praxis"]
+# Hashes, not words: this file is public. Add one with `bros scrub --hash <word>`.
+deny_sha256 = [
+  "f95971a48b6f41c5ae415e49d1711d0442ac0dec42dcd8586dfbb0c82485504f",
+  "f6f7e983afc59354c91673d637c22072ec68f710794f899ae7472dff7b7508e4",
+  "82ba7e1f6f4171d3648bb4f785ca31992efe32df6e024acb5bccd297feb2f263",
+  "ff926d04864c233ef09c586e1deb640049286451cf26c7464c811c6c6d920b8c",
+  "d5007cc3f96992ad0c10be2fda2a18bc06d8fa1a5a1672e2f131682f47e28039",
+]
 
 [bouncer]
 ask = [".github/*"]

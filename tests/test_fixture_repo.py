@@ -86,3 +86,16 @@ def test_scrub_catches_a_leak(repo):
     result = bros(repo, "scrub")
     assert result.returncode == 1
     assert email in result.stdout and home in result.stdout
+
+
+def test_scrub_refuses_hashed_words_without_naming_them(repo):
+    from bros.scrub import digest
+    (repo / ".bros.toml").write_text(
+        (repo / ".bros.toml").read_text() + f'\n[scrub]\ndeny_sha256 = ["{digest("somename")}"]\n')
+    for text in ("by Some Name", "class SomeName:", "x = 'somename'"):
+        commit(repo, "api/app.py", text + "\n")
+        result = bros(repo, "scrub")
+        assert result.returncode == 1 and "a denied word (so…)" in result.stdout
+        assert "somename" not in result.stdout.lower()
+    commit(repo, "api/app.py", "some other name\n")
+    assert bros(repo, "scrub").returncode == 0

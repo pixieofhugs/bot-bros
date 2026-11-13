@@ -71,7 +71,7 @@ another agent, or a person. The Claude-specific parts are thin wrappers around i
 | `bros audit` | GitHub hardening check: ✓/✗/? per setting, with the command that fixes each ✗ |
 | `bros guard <paths\|issue-comments\|merge>` | Runs a bouncer hook for another harness (OpenCode, git hooks) — same file the plugin runs |
 | `bros ratchet [name] [--shrink\|--init]` | Linter findings (ruff, eslint JSON) per `path::code` may only shrink, and so may the allowlist against `base`. Refuses rule-less suppressions; for ruff, also config that switches rules or files off and unpinned `select`/line length. Not covered yet: eslint config files, per-rule limits, notebooks |
-| `bros scrub` | Fails on emails, home-directory paths, or `[scrub] deny` words in tracked files |
+| `bros scrub [--hash <word>]` | Fails on emails, home-directory paths, or denied words in tracked files. `[scrub] deny_sha256` refuses a word without publishing it |
 
 ## Contributing
 
