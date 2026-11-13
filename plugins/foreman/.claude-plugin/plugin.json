@@ -1,6 +1,6 @@
 {
   "name": "foreman",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Runs the crew: review, merge and (soon) the planner and builder bots.",
   "author": { "name": "pixieofhugs", "url": "https://github.com/pixieofhugs" },
   "license": "MIT",
