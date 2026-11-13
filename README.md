@@ -69,7 +69,7 @@ another agent, or a person. The Claude-specific parts are thin wrappers around i
 | `bros pr-body` | Warns when a PR body passes `[pr_body] words` |
 | `bros issue <N>` | An issue with only collaborators' comments; strangers' text never reaches the agent |
 | `bros audit` | GitHub hardening check: ✓/✗/? per setting, with the command that fixes each ✗ |
-| `bros guard <paths\|issue-comments>` | Runs a bouncer hook for another harness (OpenCode, git hooks) — same file the plugin runs |
+| `bros guard <paths\|issue-comments\|merge>` | Runs a bouncer hook for another harness (OpenCode, git hooks) — same file the plugin runs |
 | `bros ratchet [name] [--shrink\|--init]` | Linter findings (ruff, eslint JSON) per `path::code` may only shrink, and so may the allowlist against `base`. Refuses rule-less suppressions; for ruff, also config that switches rules or files off and unpinned `select`/line length. Not covered yet: eslint config files, per-rule limits, notebooks |
 | `bros scrub` | Fails on emails, home-directory paths, or `[scrub] deny` words in tracked files |
 
