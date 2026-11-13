@@ -60,6 +60,9 @@ POLL_RETRIES = 3
 #: Review line 1, written by foreman's `reviewer` agent; extra `k=v` fields ignored.
 VERDICT = re.compile(r"^PR #(\d+) @ ([0-9a-f]{7,40}) — VERDICT:((?: [a-z][a-z-]*=\d+)+)\s*$")
 
+#: Hand-off line `PR #N ... after: #M[, #K]`: N waits for M and K to merge.
+AFTER = re.compile(r"^\W*PR #(\d+)\b.*?\bafter:((?:[ ,]*#\d+)+)")
+
 MERGED, BLOCKED, NEEDS_REVIEW = 0, 1, 3
 
 
@@ -197,6 +200,17 @@ def project_root() -> Path:
     return root
 
 
+def unmerged_predecessors(number: str, root: Path) -> list[str]:
+    """PRs a hand-off says `number` goes `after:` that are not merged yet."""
+    waits: list[str] = []
+    for handoff in sorted((root / guard.REVIEW_DIR).glob("HANDOFF-*.md")):
+        for line in handoff.read_text(encoding="utf-8").splitlines():
+            found = AFTER.match(line)
+            if found and found[1] == number:
+                waits += re.findall(r"\d+", found[2])
+    return [m for m in dict.fromkeys(waits) if _view(m)["state"] != "MERGED"]
+
+
 def land(number: str, say=lambda _: None) -> tuple[int, str]:
     root = project_root()
     review = root / guard.REVIEW_DIR / f"{number}.md"
@@ -206,6 +220,12 @@ def land(number: str, say=lambda _: None) -> tuple[int, str]:
         return BLOCKED, guard.blocking_reason(number, pull_request, owner, [], review) or ""
 
     view = _view(number)
+    waiting = unmerged_predecessors(number, root) if view["state"] == "OPEN" else []
+    if waiting:
+        return BLOCKED, (
+            f"PR #{number} goes after {', '.join('#' + m for m in waiting)} (the hand-off's "
+            "`after:`), which is not merged. Land that first."
+        )
     if view["state"] == "MERGED":
         return MERGED, f"PR #{number} is already merged."
     if view["state"] != "OPEN":

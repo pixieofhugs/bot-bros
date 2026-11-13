@@ -25,6 +25,7 @@ open. Until foreman ships a builder, write it by hand or have your own builder w
 | #<N> | Closes #<issue> | <one line: what kind of fix, what was checked> | <path> |
 
 **Merge order:** <PRs that must land before others, and why; "none" if disjoint>
+PR #<N> after: #<M>[, #<K>]    # optional, one line per PR that must wait; `bros merge` enforces it
 left open: <reason>    # only once a merge-bot has stopped on a PR
 ```
 

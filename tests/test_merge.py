@@ -121,3 +121,27 @@ def test_green_does_not_count_while_the_base_keeps_moving(monkeypatch, tmp_path)
     code, message = merge_pr.land("7")
     assert code == merge_pr.BLOCKED and "moved under it" in message
     assert not any("merge" in command for command in ran)
+
+
+def test_a_pr_goes_after_what_its_handoff_names_and_only_then(monkeypatch, tmp_path):
+    reviews = tmp_path / ".claude" / "reviews"
+    reviews.mkdir(parents=True)
+    (reviews / "7.md").write_text(CLEAN_REVIEW)
+    (reviews / "HANDOFF-wave.md").write_text(
+        "| #7 | Closes #1 | fix | wt |\n"
+        "PR #7 after: #5, #6\n"
+        "PR #8 after: #9\n"
+    )
+
+    state = {"5": "OPEN", "6": "MERGED"}
+    ran = _wire(monkeypatch, tmp_path, decide=lambda p: None)
+    view = merge_pr._view
+    monkeypatch.setattr(
+        merge_pr, "_view", lambda n: {**view(n), "state": state.get(n, "OPEN")}
+    )
+    code, message = merge_pr.land("7")
+    assert code == merge_pr.BLOCKED and "#5" in message and "#6" not in message
+    assert not any("merge" in command for command in ran)
+
+    state["5"] = "MERGED"
+    assert merge_pr.land("7")[0] == merge_pr.MERGED
