@@ -32,7 +32,7 @@ thing you might type yourself is a GitHub login.
 | **bros** | `/bros:setup` — installs and configures the rest | v0 |
 | **hush** | Comment budget + PR-body budget. Agents stop narrating. | v0 |
 | **bouncer** | Merge guard (owner's PR, green checks, a review), protected paths, safe issue-comment reading, GitHub hardening audit | v0 |
-| **foreman** | planner → builder → merge bots, reviewer, triage, git-reaper | planned |
+| **foreman** | The `reviewer` agent and `bros merge`; planner → builder → merge bots, triage, git-reaper next | v0 |
 | **squint** | Contrast (WCAG maths, design tokens, rendered pages), payload budget | planned |
 | **ratchet** (CLI) | Lint findings may only shrink: per file and rule, both ways, no cheating | v0 |
 | **snek / tsk** | Python / TypeScript rules and lint-on-edit | planned |
@@ -66,6 +66,7 @@ another agent, or a person. The Claude-specific parts are thin wrappers around i
 | `bros check [--all]` | Runs the `[[check]]` commands whose `paths` match your changes; last line is a quotable verdict |
 | `bros comments [base]` | Comment budget on the branch: `max(floor, ratio × code)` new comment lines per file |
 | `bros comments --hook` | Same, per edit, as a Claude Code hook |
+| `bros merge <N>... [--queue FILE]` | Lands PRs: readies, updates, waits for green, needs a `blocking=0` review at the current head, then merges through bouncer's guard. Queue mode stops at the first that doesn't land |
 | `bros pr-body` | Warns when a PR body passes `[pr_body] words` |
 | `bros issue <N>` | An issue with only collaborators' comments; strangers' text never reaches the agent |
 | `bros audit` | GitHub hardening check: ✓/✗/? per setting, with the command that fixes each ✗ |

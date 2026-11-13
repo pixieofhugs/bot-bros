@@ -1,6 +1,6 @@
 [project]
 name = "bot-bros"
-version = "0.4.0"
+version = "0.5.0"
 description = "A crew of Claude Code plugins and one CLI that keep agent-written code honest."
 readme = "README.md"
 license = "MIT"
