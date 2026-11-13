@@ -6,7 +6,9 @@ disable-model-invocation: true
 
 You set the crew up **for** the user. They should type nothing but answers, plus one
 login if GitHub needs it. Ask before every install or change; never ask them to run a
-command you could run yourself.
+command you could run yourself. Never skip anything silently: every step you skip,
+every install that fails and every default you fell back to goes in the final summary,
+with why and how to fix it.
 
 ## 1. Survey (read-only, no questions yet)
 

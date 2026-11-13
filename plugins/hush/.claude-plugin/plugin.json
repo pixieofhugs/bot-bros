@@ -1,6 +1,6 @@
 {
   "name": "hush",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Comment and PR-body budgets: agents stop narrating their code.",
   "author": { "name": "pixieofhugs", "url": "https://github.com/pixieofhugs" },
   "license": "MIT"

@@ -32,18 +32,23 @@ def pr_number(command: str, response: str) -> str | None:
 
 
 def main(args: list[str]) -> int:
-    try:
-        limit = cfg.load().get("pr_body", {}).get("words", 250)
-    except SystemExit:
-        limit = 250
+    conf, note = cfg.for_hook()
+    limit = conf.get("pr_body", {}).get("words", 250)
     try:
         payload = json.load(sys.stdin)
         number = pr_number(
             payload["tool_input"]["command"],
             json.dumps(payload.get("tool_response", "")),
         )
-        if not number:
-            return 0
+    except Exception as err:
+        print(f"hush: could not read the hook payload ({err!r}); PR body not checked.",
+              file=sys.stderr)
+        return 2
+    if not number:
+        return 0
+    if note:
+        print(f"hush: {note}", file=sys.stderr)
+    try:
         body = subprocess.run(
             ["gh", "pr", "view", number, "--json", "body", "-q", ".body"],
             capture_output=True,
@@ -51,11 +56,13 @@ def main(args: list[str]) -> int:
             timeout=20,
             check=True,
         ).stdout
-    except Exception:
-        return 0
+    except Exception as err:
+        print(f"hush: could not read PR #{number}'s body with gh ({err!r}); "
+              "PR body not checked. Is gh installed and logged in?", file=sys.stderr)
+        return 2
     count = words(body)
     if count <= limit:
-        return 0
+        return 2 if note else 0
     print(
         f"PR #{number} body is {count} words; the budget is {limit}. Trim it with "
         f"`gh pr edit {number} --body-file -`: no file list, one line per deviation, "

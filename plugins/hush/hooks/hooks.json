@@ -4,13 +4,19 @@
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
-          { "type": "command", "command": "command -v bros >/dev/null || exit 0; bros comments --hook" }
+          {
+            "type": "command",
+            "command": "command -v bros >/dev/null || { echo \"Bot Bros hook could not run: the bros CLI is not installed. Tell the user and offer to install it: uv tool install git+https://github.com/pixieofhugs/bot-bros\" >&2; exit 2; }; bros comments --hook"
+          }
         ]
       },
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "command -v bros >/dev/null || exit 0; bros pr-body" }
+          {
+            "type": "command",
+            "command": "command -v bros >/dev/null || { echo \"Bot Bros hook could not run: the bros CLI is not installed. Tell the user and offer to install it: uv tool install git+https://github.com/pixieofhugs/bot-bros\" >&2; exit 2; }; bros pr-body"
+          }
         ]
       }
     ]

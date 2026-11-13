@@ -45,6 +45,10 @@ Two layers, on purpose:
 - **Enforcement** — the `bros` CLI, run in CI through this repo's GitHub Action at a pinned
   tag. Dependabot bumps the tag, so a stricter rule arrives as a PR.
 
+Nothing fails silently. A hook that can't run — `bros` missing, no `.bros.toml`, `gh`
+logged out, a payload it can't read — says what broke and how to fix it, to the agent,
+which can then fix it for you.
+
 Everything that *enforces* is a plain CLI, so it works whatever wrote the code — Claude,
 another agent, or a person. The Claude-specific parts are thin wrappers around it.
 

@@ -46,10 +46,20 @@ def test_budget_floor_ratio_and_config():
     assert not cb.Budget({"skip": ["gen/"]}).checked("gen/a.py")
 
 
-def _hook(tool_input, cwd):
+import pytest
+
+
+@pytest.fixture
+def tmp_path(tmp_path):
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    (tmp_path / ".bros.toml").write_text("")
+    return tmp_path
+
+
+def _hook(tool_input, cwd, raw=None):
     return subprocess.run(
         [sys.executable, "-c", "from bros.cli import main; main()", "comments", "--hook"],
-        input=json.dumps({"tool_input": tool_input}),
+        input=raw if raw is not None else json.dumps({"tool_input": tool_input}),
         capture_output=True, text=True, cwd=cwd,
         env={**os.environ, "PYTHONPATH": str(SRC)},
     )
@@ -67,9 +77,28 @@ def test_hook_passes_a_rewrite_that_cuts_comments(tmp_path):
     assert r.returncode == 0
 
 
-def test_hook_ignores_non_code_and_bad_input(tmp_path):
+def test_hook_ignores_non_code(tmp_path):
     assert _hook({"file_path": "a.md", "content": "# h\n" * 50}, tmp_path).returncode == 0
-    assert _hook({}, tmp_path).returncode == 0
+
+
+def test_hook_never_fails_silently(tmp_path):
+    bad = _hook(None, tmp_path, raw="not json")
+    assert bad.returncode == 2 and "could not read the hook payload" in bad.stderr
+    (tmp_path / ".bros.toml").unlink()
+    unset = _hook({"file_path": "a.py", "new_string": "x = 1"}, tmp_path)
+    assert unset.returncode == 2 and "run /bros:setup" in unset.stderr
+    (tmp_path / ".bros.toml").write_text("not = [toml")
+    broken = _hook({"file_path": "a.py", "new_string": "x = 1"}, tmp_path)
+    assert broken.returncode == 2 and "not valid TOML" in broken.stderr
+
+
+def test_plugin_hooks_say_when_bros_is_missing():
+    hooks = json.loads((SRC.parent / "plugins/hush/hooks/hooks.json").read_text())
+    for group in hooks["hooks"]["PostToolUse"]:
+        for h in group["hooks"]:
+            r = subprocess.run(["sh", "-c", h["command"]], capture_output=True, text=True,
+                               env={"PATH": "/usr/bin:/bin"})
+            assert r.returncode == 2 and "bros CLI is not installed" in r.stderr
 
 
 def test_pr_body_words_skip_the_footer():

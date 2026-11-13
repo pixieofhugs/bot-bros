@@ -122,14 +122,18 @@ def lint(base: str, budget: Budget) -> int:
     return 0
 
 
-def hook(budget: Budget) -> int:
+def hook(budget: Budget, note: str = "") -> int:
     try:
         tool_input = json.load(sys.stdin)["tool_input"]
         path = tool_input["file_path"]
-    except Exception:
-        return 0  # a nudge, not a security control: unreadable input passes
+    except Exception as err:
+        print(f"hush: could not read the hook payload ({err!r}); comment budget not checked.",
+              file=sys.stderr)
+        return 2
+    if note:
+        print(f"hush: {note}", file=sys.stderr)
     if not budget.checked(path):
-        return 0
+        return 2 if note else 0
     suffix = Path(path).suffix
     comments = code = 0
     for edit in tool_input.get("edits") or [tool_input]:
@@ -144,16 +148,13 @@ def hook(budget: Budget) -> int:
             file=sys.stderr,
         )
         return 2
-    return 0
+    return 2 if note else 0
 
 
 def main(args: list[str]) -> int:
     if "--hook" in args:
-        try:
-            settings = cfg.load().get("comments")
-        except SystemExit:
-            settings = None
-        return hook(Budget(settings))
+        conf, note = cfg.for_hook()
+        return hook(Budget(conf.get("comments")), note)
     conf = cfg.load()
     base = args[0] if args else conf.get("base", "origin/main")
     return lint(base, Budget(conf.get("comments")))
