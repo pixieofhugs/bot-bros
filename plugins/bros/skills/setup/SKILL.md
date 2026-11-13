@@ -58,7 +58,10 @@ who knows nothing can accept every default.
 2. **Crew** — which plugins to turn on: `hush` (comment + PR-body budgets), `bouncer`
    (protected paths, safe issue reading, repo hardening). Recommend all.
 3. **Generated paths** the comment budget must skip (migrations, generated API clients).
-4. **Protected paths** — `ask` (user approves each change; recommend `.github/*`) and
+4. **Ratchets** — for each linter the repo already runs (ruff, eslint), offer a
+   `[[ratchet]]` so its findings can only shrink. Recommend it for any linter with
+   findings today: they get baselined, and new code has to come in clean.
+5. **Protected paths** — `ask` (user approves each change; recommend `.github/*`) and
    `deny` (only a human edits: guard scripts, anything they name).
 
 ## 4. Write the config
@@ -84,7 +87,21 @@ words = 250
 [bouncer]
 ask = [".github/*"]
 deny = []
+
+[[ratchet]]
+name = "ruff"
+format = "ruff"                  # or "eslint"
+dir = "api"                      # where the linter runs; keys are relative to it
+run = "{python} -m ruff check --no-cache --output-format json ."
+requires = "ruff==<the version the repo pins>"
+allowlist = "api/ruff-allowlist.json"
 ```
+
+For each ratchet, run `bros ratchet <name> --init` once to baseline it, add a
+`[[check]]` that runs `bros ratchet`, and give the CI job the linter:
+`with: { command: ratchet, install: "ruff==<pinned>" }`. With `requires` set, bros runs
+the pinned linter in its own Python; locally that means
+`uv tool install --force git+https://github.com/pixieofhugs/bot-bros --with ruff==<pinned>`.
 
 **`.claude/settings.json`** — add, keeping everything else:
 

@@ -61,7 +61,8 @@ def render(issue: dict, kept: list[dict], withheld: int) -> str:
     author = (issue.get("author") or {}).get("login", "unknown")
     lines = [
         f"#{issue.get('number')}  {issue.get('title')}",
-        f"state: {issue.get('state')}  author: {author}" + (f"  labels: {labels}" if labels else ""),
+        f"state: {issue.get('state')}  author: {author}"
+        + (f"  labels: {labels}" if labels else ""),
         "",
         (issue.get("body") or "").strip(),
         "",
@@ -92,7 +93,8 @@ def guard_enabled() -> bool:
         settings = json.loads((cfg.repo_root() / ".claude" / "settings.json").read_text())
     except (OSError, json.JSONDecodeError, SystemExit):
         return False
-    return any(k.startswith("bouncer@") and v for k, v in (settings.get("enabledPlugins") or {}).items())
+    plugins = settings.get("enabledPlugins") or {}
+    return any(k.startswith("bouncer@") and on for k, on in plugins.items())
 
 
 def main(argv: list[str]) -> int:

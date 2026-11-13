@@ -2,11 +2,28 @@ base = "origin/main"
 
 [[check]]
 name = "pytest"
-run = "pytest -q"
+run = "uvx --with pytest pytest -q"
 
 [[check]]
 name = "scrub"
 run = "bros scrub"
+
+[[check]]
+name = "ratchet"
+run = "bros ratchet"
+
+[[check]]
+name = "comments"
+run = "bros comments"
+
+[[ratchet]]
+name = "ruff"
+format = "ruff"
+run = "{python} -m ruff check --no-cache --output-format json ."
+requires = "ruff==0.16.4"
+select = ["E", "F", "I"]
+line_length = 100
+allowlist = "ruff-allowlist.json"
 
 [scrub]
 deny = ["WorldZero", "World Zero", "worldzero", "Molly", "Strata", "faction", "praxis"]

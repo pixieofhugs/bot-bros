@@ -104,8 +104,9 @@ def checks(root: Path, conf: dict) -> list[tuple[str, callable]]:
                 "-f default_workflow_permissions=read")
 
     def codeowners():
-        found = any((root / p).exists() for p in (".github/CODEOWNERS", "CODEOWNERS", "docs/CODEOWNERS"))
-        return found, "no CODEOWNERS", "/bros:setup writes .github/CODEOWNERS for the protected paths"
+        places = (".github/CODEOWNERS", "CODEOWNERS", "docs/CODEOWNERS")
+        found = any((root / p).exists() for p in places)
+        return found, "no CODEOWNERS", "/bros:setup writes .github/CODEOWNERS"
 
     def dependabot():
         path = root / ".github/dependabot.yml"
@@ -119,10 +120,12 @@ def checks(root: Path, conf: dict) -> list[tuple[str, callable]]:
         for wf in sorted((root / ".github/workflows").glob("*.y*ml")):
             for n, line in enumerate(wf.read_text().splitlines(), 1):
                 m = re.match(r"\s*(?:-\s*)?uses:\s*[\"']?([^\s#\"']+)", line)
-                if m and not m.group(1).startswith(("./", "docker://")) and not SHA.search(m.group(1)):
-                    loose.append(f"{wf.name}:{n} {m.group(1)}")
-        return not loose, "not pinned by SHA: " + "; ".join(loose[:5]) + (" …" if len(loose) > 5 else ""), \
-            "/bros:setup rewrites each to `owner/action@<sha> # <tag>` (Dependabot keeps them current)"
+                ref = m and m.group(1)
+                if ref and not ref.startswith(("./", "docker://")) and not SHA.search(ref):
+                    loose.append(f"{wf.name}:{n} {ref}")
+        shown = "; ".join(loose[:5]) + (" …" if len(loose) > 5 else "")
+        return not loose, f"not pinned by SHA: {shown}", \
+            "/bros:setup rewrites each to `owner/action@<sha> # <tag>`"
 
     def labels():
         want = conf.get("labels", LABELS)
