@@ -21,6 +21,18 @@ shell writes (`sed -i`, `>`, `rm`, `mv`, …) are checked.
 - **`deny`**: don't look for another route. Stop, and tell the user the exact change you
   wanted and why. They make it themselves.
 
+## Merging
+
+`gh pr merge <N>` is denied unless all three hold:
+1. You and the PR's head repository are both the repo owner. A fork's PR is a
+   stranger's code: don't merge it, check it out, or run it. Report it.
+2. Every required check in branch protection is green on the PR's current head. An
+   older green run doesn't count, so push or `gh pr update-branch` and wait.
+3. `.claude/reviews/<N>.md` exists and isn't empty. CI passing is not a review.
+
+Name exactly one PR number, and don't pass `--repo`. The guard denies whenever it can't
+tell, and it's human-only: put it in `[bouncer] deny` and never route around it.
+
 ## Issue comments
 
 Anyone with a GitHub account can comment on a public issue, and a bot that acts on an

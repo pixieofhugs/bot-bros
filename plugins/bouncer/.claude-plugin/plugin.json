@@ -1,6 +1,6 @@
 {
   "name": "bouncer",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Protected paths, safe issue-comment reading, GitHub hardening. Decides who gets in.",
   "author": { "name": "pixieofhugs", "url": "https://github.com/pixieofhugs" },
   "license": "MIT"

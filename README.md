@@ -31,8 +31,7 @@ thing you might type yourself is a GitHub login.
 |---|---|---|
 | **bros** | `/bros:setup` — installs and configures the rest | v0 |
 | **hush** | Comment budget + PR-body budget. Agents stop narrating. | v0 |
-| **bouncer** | Protected paths, safe issue-comment reading, GitHub hardening audit | v0 |
-| **bouncer** merge guard | No merge without green checks and a review | next |
+| **bouncer** | Merge guard (owner's PR, green checks, a review), protected paths, safe issue-comment reading, GitHub hardening audit | v0 |
 | **foreman** | planner → builder → merge bots, reviewer, triage, git-reaper | planned |
 | **squint** | Contrast (WCAG maths, design tokens, rendered pages), payload budget | planned |
 | **snek / tsk** | Python / TypeScript rules and lint-on-edit | planned |
@@ -69,7 +68,7 @@ another agent, or a person. The Claude-specific parts are thin wrappers around i
 | `bros pr-body` | Warns when a PR body passes `[pr_body] words` |
 | `bros issue <N>` | An issue with only collaborators' comments; strangers' text never reaches the agent |
 | `bros audit` | GitHub hardening check: ✓/✗/? per setting, with the command that fixes each ✗ |
-| `bros guard <paths\|issue-comments>` | Runs a bouncer hook for another harness (OpenCode, git hooks) — same file the plugin runs |
+| `bros guard <paths\|issue-comments\|merge>` | Runs a bouncer hook for another harness (OpenCode, git hooks) — same file the plugin runs |
 | `bros scrub` | Fails on emails, home-directory paths, or `[scrub] deny` words in tracked files |
 
 ## Contributing
