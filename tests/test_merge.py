@@ -204,3 +204,23 @@ def test_a_pr_stacked_on_this_branch_is_retargeted_before_the_branch_is_deleted(
     assert merge_pr.land("7")[0] == merge_pr.MERGED
     edit = ran.index("pr edit 12 --base main")
     assert edit < next(i for i, c in enumerate(ran) if c.startswith("gh pr merge 7"))
+
+
+def test_a_failed_merge_puts_its_retargeted_children_back(monkeypatch, tmp_path):
+    (tmp_path / ".claude" / "reviews").mkdir(parents=True)
+    (tmp_path / ".claude" / "reviews" / "7.md").write_text(CLEAN_REVIEW)
+    ran = _wire(monkeypatch, tmp_path, decide=lambda payload: None)
+    view = merge_pr._view("7") | {"headRefName": "feature"}
+    monkeypatch.setattr(merge_pr, "_view", lambda n: view)
+
+    def fake_gh(*args):
+        ran.append(" ".join(args))
+        return "12\n" if args[:2] == ("pr", "list") else ""
+
+    def refuse(command, **_):
+        return type("Done", (), {"returncode": 1, "stderr": "head moved"})()
+
+    monkeypatch.setattr(guard, "_gh", fake_gh)
+    monkeypatch.setattr(merge_pr.subprocess, "run", refuse)
+    assert merge_pr.land("7")[0] == merge_pr.BLOCKED
+    assert ran[-2:] == ["pr edit 12 --base main", "pr edit 12 --base feature"]

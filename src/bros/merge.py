@@ -285,7 +285,8 @@ def land(number: str, say=lambda _: None) -> tuple[int, str]:
             "while CI ran. Re-run this when the other merges have settled."
         )
 
-    head = _view(number)["headRefOid"]
+    final = _view(number)
+    head = final["headRefOid"]
     refusal = review_refusal(
         number,
         review.read_text(encoding="utf-8") if review.is_file() else "",
@@ -300,7 +301,7 @@ def land(number: str, say=lambda _: None) -> tuple[int, str]:
     if reason:
         return BLOCKED, reason
 
-    head_ref = _view(number).get("headRefName")
+    head_ref = final.get("headRefName")
     moved = _retarget_children(head_ref, pull_request.base_ref) if head_ref else []
     if moved:
         say(f"retargeted {', '.join('#' + c for c in moved)} onto {pull_request.base_ref}")
@@ -311,6 +312,8 @@ def land(number: str, say=lambda _: None) -> tuple[int, str]:
     )  # fmt: skip
     # `gh` can fail after merging (local branch delete), so trust the PR state.
     if merged.returncode != 0 and _view(number)["state"] != "MERGED":
+        for child in moved:  # the parent stays, so its children go back on it
+            guard._gh("pr", "edit", child, "--base", head_ref)
         return BLOCKED, f"`{command}` failed: {merged.stderr.strip()}"
     fetched = subprocess.run(["git", "fetch", "-q", "origin", pull_request.base_ref], timeout=120)
     tail = "re-fetched" if fetched.returncode == 0 else "NOT re-fetched — fetch it yourself"

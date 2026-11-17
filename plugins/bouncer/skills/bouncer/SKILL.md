@@ -39,11 +39,14 @@ How the guard reads a call, which explains most surprise denials:
 - **It reads the command before anything in it runs.** A review file written, or a wait
   for green, earlier in the same command doesn't exist yet as far as it knows. Write, wait
   and merge in separate calls, or use `bros merge`, which checks as it goes.
-- **A `#<number>` anywhere in `--subject` or `--body` is a second PR number.** Put the body
-  in a file (`--body-file`) and keep numbers out of the subject.
-- **It reads text, not intent.** `gh pr merge` or a raw comment read anywhere a command
-  could start counts, even inside a quoted `grep` pattern after a `|`. To search for those
-  strings, use a file-reading tool, not the shell.
+- **A bare number anywhere in the merge's arguments is a second PR number:**
+  `--subject "fix 3 bugs"`, or a version like `0.10.0`. `#42`, and numbers inside a word or
+  path (`body-17.md`, `v2`), don't count. Put the body in a file (`--body-file`) and keep bare
+  numbers out of the subject.
+- **It reads text, not intent.** The merge guard spots `gh pr merge` wherever a command
+  could start: after a `;`, `&` or `|`, even one inside a quoted `grep` pattern. The comment
+  guard matches a raw comment read anywhere in the text, `echo` strings included. To search
+  for those strings, use a file-reading tool, not the shell.
 
 ## Issue comments
 

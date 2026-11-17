@@ -141,8 +141,8 @@ every other open PR (updating eagerly wastes a full CI cycle):
    `blocking>0` or a commit the review never saw. A finding you think is wrong goes to the
    user. **Read line 1 against the findings yourself:** the command trusts the count, so
    `blocking=0` above a blocking finding merges. A wrong verdict goes back to the reviewer to
-   reissue; never edit a review file yourself. Nits → merge. At close-out, `cat` the review files of the PRs **this session
-   landed**, once, and paste them.
+   reissue; never edit a review file yourself. Nits → merge. At close-out, `cat` the
+   review files of the PRs **this session landed**, once, and paste them.
    `bros merge` retargets any open PR stacked on this branch onto the base before it
    deletes the branch. A child closed by an older merge can come back: push any commit to
    the deleted branch name, `gh pr reopen`, `gh pr edit --base <base>`, then delete the name
