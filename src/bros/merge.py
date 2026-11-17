@@ -77,7 +77,9 @@ def checks_state(checks: dict[str, str], required: list[str]) -> tuple[str, list
 
 def _view(number: str) -> dict:
     return json.loads(
-        guard._gh("pr", "view", number, "--json", "state,isDraft,headRefOid,baseRefName")
+        guard._gh(
+            "pr", "view", number, "--json", "state,isDraft,headRefOid,headRefName,baseRefName"
+        )
     )
 
 
@@ -102,6 +104,17 @@ def _update_branch(number: str, view: dict) -> None:
         if time.monotonic() > deadline:
             raise RuntimeError("update-branch was accepted but the head never moved")
         time.sleep(3)
+
+
+def _retarget_children(head_ref: str, base: str) -> list[str]:
+    """Move PRs stacked on `head_ref` onto `base`; `--delete-branch` would close them."""
+    children = guard._gh(
+        "pr", "list", "--base", head_ref, "--state", "open", "--json", "number", "--jq",
+        ".[].number",
+    ).split()  # fmt: skip
+    for child in children:
+        guard._gh("pr", "edit", child, "--base", base)
+    return children
 
 
 def _wait_for_green(number: str, root: Path) -> str | None:
@@ -286,6 +299,11 @@ def land(number: str, say=lambda _: None) -> tuple[int, str]:
     reason = guard.decide({"tool_name": "Bash", "tool_input": {"command": command}})
     if reason:
         return BLOCKED, reason
+
+    head_ref = _view(number).get("headRefName")
+    moved = _retarget_children(head_ref, pull_request.base_ref) if head_ref else []
+    if moved:
+        say(f"retargeted {', '.join('#' + c for c in moved)} onto {pull_request.base_ref}")
 
     merged = subprocess.run(
         [*command.split(), "--match-head-commit", head],

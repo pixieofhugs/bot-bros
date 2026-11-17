@@ -31,7 +31,19 @@ shell writes (`sed -i`, `>`, `rm`, `mv`, …) are checked.
 3. `.claude/reviews/<N>.md` exists and isn't empty. CI passing is not a review.
 
 Name exactly one PR number, and don't pass `--repo`. The guard denies whenever it can't
-tell, and it's human-only: put it in `[bouncer] deny` and never route around it.
+tell, and it's human-only: put it in `[bouncer] deny` and never route around it. An issue
+whose fix lives in a guard is `ready-for-human`, however small the diff.
+
+How the guard reads a call, which explains most surprise denials:
+
+- **It reads the command before anything in it runs.** A review file written, or a wait
+  for green, earlier in the same command doesn't exist yet as far as it knows. Write, wait
+  and merge in separate calls, or use `bros merge`, which checks as it goes.
+- **A `#<number>` anywhere in `--subject` or `--body` is a second PR number.** Put the body
+  in a file (`--body-file`) and keep numbers out of the subject.
+- **It reads text, not intent.** `gh pr merge` or a raw comment read anywhere a command
+  could start counts, even inside a quoted `grep` pattern after a `|`. To search for those
+  strings, use a file-reading tool, not the shell.
 
 ## Issue comments
 

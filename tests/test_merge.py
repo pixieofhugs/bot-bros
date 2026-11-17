@@ -186,3 +186,21 @@ def test_after_lines_about_other_prs_or_prose_never_block(monkeypatch, tmp_path)
         "PR #70 after: nonsense\n"
     )
     assert _after(monkeypatch, tmp_path, handoff, {})[0] == merge_pr.MERGED
+
+
+def test_a_pr_stacked_on_this_branch_is_retargeted_before_the_branch_is_deleted(
+    monkeypatch, tmp_path
+):
+    (tmp_path / ".claude" / "reviews").mkdir(parents=True)
+    (tmp_path / ".claude" / "reviews" / "7.md").write_text(CLEAN_REVIEW)
+    ran = _wire(monkeypatch, tmp_path, decide=lambda payload: None)
+    view = merge_pr._view("7") | {"headRefName": "feature"}
+    monkeypatch.setattr(merge_pr, "_view", lambda n: view)
+    def fake_gh(*args):
+        ran.append(" ".join(args))
+        return "12\n" if args[:2] == ("pr", "list") else ""
+
+    monkeypatch.setattr(guard, "_gh", fake_gh)
+    assert merge_pr.land("7")[0] == merge_pr.MERGED
+    edit = ran.index("pr edit 12 --base main")
+    assert edit < next(i for i, c in enumerate(ran) if c.startswith("gh pr merge 7"))

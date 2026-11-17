@@ -123,7 +123,10 @@ every other open PR (updating eagerly wastes a full CI cycle):
    worktree does not follow), into `.claude/reviews/shots/<N>/` in this checkout. What to
    shoot comes from the PR body's "What to eyeball" list. **Do not Read the PNGs
    yourself** — every image stays in this session for every later turn. Give the directory
-   to the reviewer. A run that will not start is not a blocker and not a pass: the PR goes
+   to the reviewer. A *baseline* (main next to the PR) comes from a worktree pinned with
+   `git worktree add --detach <dir> <sha>`, never the main checkout: other sessions
+   fast-forward it as PRs land, and a run that straddles that compares against two mains.
+   A run that will not start is not a blocker and not a pass: the PR goes
    into Step 3 as *not looked at*.
 
    Then dispatch the **`reviewer`** agent (`foreman:reviewer`, or the repo's own `reviewer`
@@ -136,8 +139,18 @@ every other open PR (updating eagerly wastes a full CI cycle):
    Blocking finding → fix on the branch if small, or dispatch a fix round (below); then
    dispatch `reviewer` again and re-run the command — it will not merge past a verdict with
    `blocking>0` or a commit the review never saw. A finding you think is wrong goes to the
-   user. Nits → merge. At close-out, `cat` the review files of the PRs **this session
+   user. **Read line 1 against the findings yourself:** the command trusts the count, so
+   `blocking=0` above a blocking finding merges. A wrong verdict goes back to the reviewer to
+   reissue; never edit a review file yourself. Nits → merge. At close-out, `cat` the review files of the PRs **this session
    landed**, once, and paste them.
+   `bros merge` retargets any open PR stacked on this branch onto the base before it
+   deletes the branch. A child closed by an older merge can come back: push any commit to
+   the deleted branch name, `gh pr reopen`, `gh pr edit --base <base>`, then delete the name
+   again. Either way the child now carries the parent's pre-squash commits and may conflict.
+   With force-push off, replay its own commits onto the base on a temp branch, then make
+   that tree a normal commit on the PR branch (`git merge --no-commit origin/<base>`,
+   `git read-tree --reset -u <temp>`, commit, push), and have the reviewer confirm the PR's
+   diff did not change.
 3. **If the command exited `3`** (green before a review cleared this head), re-run it once
    the review file is in place. Then move to the next PR.
 
