@@ -32,7 +32,7 @@ thing you might type yourself is a GitHub login.
 | **bros** | `/bros:setup` — installs and configures the rest | v0 |
 | **hush** | Comment budget + PR-body budget. Agents stop narrating. | v0 |
 | **bouncer** | Merge guard (owner's PR, green checks, a review), protected paths, safe issue-comment reading, GitHub hardening audit | v0 |
-| **foreman** | The `reviewer` agent, `bros merge` and the `merge-bot` skill; planner → builder bots, triage, git-reaper next | v0 |
+| **foreman** | The `reviewer` and `triage` agents, `bros merge`, `bros board`, and the `merge-bot`, `bug-bot` and `git-reaper` skills; planner → builder bots next | v0 |
 | **squint** | Contrast (WCAG maths, design tokens, rendered pages), payload budget | planned |
 | **ratchet** (CLI) | Lint findings may only shrink: per file and rule, both ways, no cheating | v0 |
 | **snek / tsk** | Python / TypeScript rules and lint-on-edit | planned |
@@ -69,6 +69,7 @@ another agent, or a person. The Claude-specific parts are thin wrappers around i
 | `bros merge <N>... [--queue FILE]` | Lands PRs: readies, updates, waits for green, needs a `blocking=0` review at the current head, then merges through bouncer's guard. Queue mode stops at the first that doesn't land |
 | `bros pr-body` | Warns when a PR body passes `[pr_body] words` |
 | `bros issue <N>` | An issue with only collaborators' comments; strangers' text never reaches the agent |
+| `bros board [--repo OWNER/NAME]` | The open `ready-for-agent` issues in one table: open blockers, the PR in flight, size, and the newest collaborator `Verified-at` stamp |
 | `bros audit` | GitHub hardening check: ✓/✗/? per setting, with the command that fixes each ✗ |
 | `bros guard <paths\|issue-comments\|merge>` | Runs a bouncer hook for another harness (OpenCode, git hooks) — same file the plugin runs |
 | `bros ratchet [name] [--shrink\|--init]` | Linter findings (ruff, eslint JSON) per `path::code` may only shrink, and so may the allowlist against `base`. Refuses rule-less suppressions; for ruff, also config that switches rules or files off and unpinned `select`/line length. Not covered yet: eslint config files, per-rule limits, notebooks |

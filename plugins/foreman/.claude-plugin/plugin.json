@@ -1,7 +1,7 @@
 {
   "name": "foreman",
-  "version": "0.7.0",
-  "description": "Runs the crew: review, merge and (soon) the planner and builder bots.",
+  "version": "0.8.0",
+  "description": "Runs the crew: review, merge, triage, bug intake, git cleanup and (soon) the planner and builder bots.",
   "author": { "name": "pixieofhugs", "url": "https://github.com/pixieofhugs" },
   "license": "MIT",
   "dependencies": ["bouncer"]
