@@ -1,6 +1,6 @@
 {
   "name": "foreman",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Runs the crew: plan, triage, build, review, merge, bug intake and git cleanup.",
   "author": { "name": "pixieofhugs", "url": "https://github.com/pixieofhugs" },
   "license": "MIT",

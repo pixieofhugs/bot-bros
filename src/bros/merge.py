@@ -77,7 +77,9 @@ def checks_state(checks: dict[str, str], required: list[str]) -> tuple[str, list
 
 def _view(number: str) -> dict:
     return json.loads(
-        guard._gh("pr", "view", number, "--json", "state,isDraft,headRefOid,baseRefName")
+        guard._gh(
+            "pr", "view", number, "--json", "state,isDraft,headRefOid,headRefName,baseRefName"
+        )
     )
 
 
@@ -102,6 +104,17 @@ def _update_branch(number: str, view: dict) -> None:
         if time.monotonic() > deadline:
             raise RuntimeError("update-branch was accepted but the head never moved")
         time.sleep(3)
+
+
+def _retarget_children(head_ref: str, base: str) -> list[str]:
+    """Move PRs stacked on `head_ref` onto `base`; `--delete-branch` would close them."""
+    children = guard._gh(
+        "pr", "list", "--base", head_ref, "--state", "open", "--json", "number", "--jq",
+        ".[].number",
+    ).split()  # fmt: skip
+    for child in children:
+        guard._gh("pr", "edit", child, "--base", base)
+    return children
 
 
 def _wait_for_green(number: str, root: Path) -> str | None:
@@ -272,7 +285,8 @@ def land(number: str, say=lambda _: None) -> tuple[int, str]:
             "while CI ran. Re-run this when the other merges have settled."
         )
 
-    head = _view(number)["headRefOid"]
+    final = _view(number)
+    head = final["headRefOid"]
     refusal = review_refusal(
         number,
         review.read_text(encoding="utf-8") if review.is_file() else "",
@@ -287,12 +301,19 @@ def land(number: str, say=lambda _: None) -> tuple[int, str]:
     if reason:
         return BLOCKED, reason
 
+    head_ref = final.get("headRefName")
+    moved = _retarget_children(head_ref, pull_request.base_ref) if head_ref else []
+    if moved:
+        say(f"retargeted {', '.join('#' + c for c in moved)} onto {pull_request.base_ref}")
+
     merged = subprocess.run(
         [*command.split(), "--match-head-commit", head],
         capture_output=True, text=True, timeout=120,
     )  # fmt: skip
     # `gh` can fail after merging (local branch delete), so trust the PR state.
     if merged.returncode != 0 and _view(number)["state"] != "MERGED":
+        for child in moved:  # the parent stays, so its children go back on it
+            guard._gh("pr", "edit", child, "--base", head_ref)
         return BLOCKED, f"`{command}` failed: {merged.stderr.strip()}"
     fetched = subprocess.run(["git", "fetch", "-q", "origin", pull_request.base_ref], timeout=120)
     tail = "re-fetched" if fetched.returncode == 0 else "NOT re-fetched — fetch it yourself"

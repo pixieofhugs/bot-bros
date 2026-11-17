@@ -70,7 +70,7 @@ another agent, or a person. The Claude-specific parts are thin wrappers around i
 | `bros check [--all]` | Runs the `[[check]]` commands whose `paths` match your changes; last line is a quotable verdict |
 | `bros comments [base]` | Comment budget on the branch: `max(floor, ratio × code)` new comment lines per file |
 | `bros comments --hook` | Same, per edit, as a Claude Code hook |
-| `bros merge <N>... [--queue FILE]` | Lands PRs: readies, updates, waits for green, needs a `blocking=0` review at the current head, then merges through bouncer's guard. Queue mode stops at the first that doesn't land |
+| `bros merge <N>... [--queue FILE]` | Lands PRs: readies, updates, waits for green, needs a `blocking=0` review at the current head, retargets any PR stacked on it, then merges through bouncer's guard. Queue mode stops at the first that doesn't land |
 | `bros pr-body` | Warns when a PR body passes `[pr_body] words` |
 | `bros issue <N>` | An issue with only collaborators' comments; strangers' text never reaches the agent |
 | `bros board [--repo OWNER/NAME]` | The open `ready-for-agent` issues in one table: open blockers, the PR in flight, size, and the newest collaborator `Verified-at` stamp |

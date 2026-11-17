@@ -176,8 +176,11 @@ If the build notes add a footprint step, run it here. Its answers are leads: con
 path on `origin/main` before you group on it.
 
 - **Disjoint footprints → dispatch in parallel.**
-- **Shared file → strictly serialize**, and say which order and why. Two agents editing the
-  same file in parallel means a painful rebase or lost work.
+- **Shared file → strictly serialize**, and say which order and why. Two agents editing
+  the same file in parallel means a painful rebase or lost work. Serialize with the
+  hand-off's `after:` line, not by basing one PR on another's branch: a stacked PR fights
+  the parent's squash (`bros merge` retargets it, but its diff then carries the parent's
+  commits).
 - **Cross-cutting issues** (a refactor touching every consumer) run **alone**. Last by
   default — but **first** when another issue in the batch edits a file the refactor
   rewrites, because running it last makes that issue's work collateral. Say which and why.

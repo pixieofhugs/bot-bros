@@ -340,6 +340,9 @@ two-minute clicks share one line, `/foreman:planner-bot walk #A #B #C`.
 
 1. Check for a live `/foreman:builder-bot` or `/foreman:merge-bot` (Hazard 8) — a walk rules on issues.
 2. Read each named issue whole, through the wrapper.
+   A command the owner runs via `!` has no terminal: prompts read EOF and editors hang. A
+   wizard or login runs in a real terminal window, and a command handed over has no
+   placeholder in it to fill — it gets pasted as written.
 3. Do the work with the owner under the rules above: a wizard where it earns one, the
    click-through where it does not.
 4. Each issue leaves with a new label — or, when the owner approves its close in this session,
