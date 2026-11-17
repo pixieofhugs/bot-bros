@@ -157,7 +157,7 @@ doc is the thing that just became wrong.
 
 ## What this does NOT do
 
-- **It does not write the fix.** It produces issues. A builder bot builds them.
+- **It does not write the fix.** It produces issues. `/foreman:builder-bot` builds them.
 - **It does not amend ADRs or the style guide itself.** It writes down *that* they change,
   and what to. The building agent does the edit, in the same PR as the code.
 - **It does not label anything `ready-for-agent` on a guess.** An issue whose scope is still

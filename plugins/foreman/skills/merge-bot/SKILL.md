@@ -17,7 +17,7 @@ files, the writer rules a fix round loads, what a merge to the default branch de
 any close-out step the repo adds. No notes → skip the steps that need them and say so.
 
 **The hand-off** is a markdown file the builder writes last, once every PR in the wave is
-open. Until foreman ships a builder, write it by hand or have your own builder write it:
+open. `/foreman:builder-bot` writes it; by hand, use the same form:
 
 ```
 | PR | Issue | Resolution | Worktree |
