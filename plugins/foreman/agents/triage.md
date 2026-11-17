@@ -28,8 +28,8 @@ A name in an issue is a hypothesis. Search for the **concept** — the enforceme
 code, the guard test — on `origin/main` (`git fetch -q origin main`, then `git grep … origin/main`
 and `git show origin/main:<path>`; your checkout can predate recent merges). Then, in order:
 the guard tests that would fail if the claim were true, the glossary, ADRs and specs the
-repo's `CLAUDE.md` routes to, open PR branches. **Running the guard test that would fail if the issue were right is the strongest
-cheap check.**
+repo's `CLAUDE.md` routes to, open PR branches. **Running the guard test that would fail if
+the issue were right is the strongest cheap check.**
 
 Split what is unknown: a **mechanical unknown** (a config value, which route enforces it,
 which ADR governs it) you answer yourself; a **product fork** only the owner can decide.

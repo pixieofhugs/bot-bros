@@ -93,9 +93,9 @@ wastes a whole build.
 
 ### 4 · File
 
-Show the split first — how many issues, which is which — then file. Bodies go through the
-**Write** tool and `gh issue create --body-file`. Never a heredoc and never `--body` with
-backticks in it; both have corrupted bodies silently.
+Show the split first — how many issues, which is which — then file. Bodies go through
+`gh issue create --body-file`, fed by the **Write** tool or a *quoted* heredoc (`<<'EOF'`).
+Never `--body "…"` and never an unquoted heredoc: the shell runs the backticks in both.
 
 Cross-link siblings with a comment when several issues share a root cause, and say in the
 comment why they stayed separate.

@@ -60,3 +60,8 @@ def test_failed_collaborator_lookup_prints_no_board(monkeypatch, capsys):
     assert board.main(["--repo", "o/r"]) == 1
     out = capsys.readouterr()
     assert out.out == "" and "REFUSING" in out.err
+
+
+def test_a_pipe_in_a_title_stays_inside_its_cell():
+    row = board.build_rows([_issue(3)], frozenset())[0] | {"title": "a | b"}
+    assert "a \\| b" in board.render([row])

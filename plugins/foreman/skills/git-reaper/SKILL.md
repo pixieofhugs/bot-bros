@@ -177,7 +177,7 @@ Before and after, as numbers: worktrees, branches, `.git` size. Then:
 
 ## Scripting notes
 
-Sweeps mean hundreds of `git` calls, so they get scripted, and two things bite every time:
+Sweeps mean hundreds of `git` calls, so they get scripted, and one thing bites every time:
 
 - **Force UTF-8 when reading git output from Python.** A non-UTF-8 locale
   raises `UnicodeDecodeError` on diff bytes and kills the run mid-sweep:

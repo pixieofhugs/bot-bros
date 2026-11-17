@@ -14,6 +14,7 @@ import sys
 
 from bros import issue
 
+# ponytail: first 100 issues, last 20 comments each; page if the board outgrows it.
 QUERY = """
 query($owner: String!, $name: String!) {
   repository(owner: $owner, name: $name) {
@@ -63,11 +64,15 @@ def build_rows(issues: list[dict], collaborators: frozenset[str]) -> list[dict]:
     return rows
 
 
+def _cell(text: str) -> str:
+    return text.replace("|", "\\|")
+
+
 def render(rows: list[dict]) -> str:
     head = "| issue | blocked_by | in flight | size | planner stamp |\n|---|---|---|---|---|"
     lines = [
-        f"| #{r['number']} {r['title'][:60]} | {r['blocked_by']} | {r['pr']} | {r['size']} "
-        f"| {r['stamp']} |"
+        f"| #{r['number']} {_cell(r['title'][:60])} | {r['blocked_by']} | {r['pr']} | {r['size']} "
+        f"| {_cell(r['stamp'])} |"
         for r in rows
     ]
     return "\n".join([head, *lines]) if lines else "No open ready-for-agent issues."
@@ -77,6 +82,8 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="bros board", description=__doc__.splitlines()[0])
     parser.add_argument("--repo", help="OWNER/NAME (default: this checkout's remote)")
     args = parser.parse_args(argv)
+    if args.repo and args.repo.count("/") != 1:
+        parser.error(f"--repo wants OWNER/NAME, got {args.repo!r}")
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     try:
@@ -95,5 +102,4 @@ def main(argv: list[str]) -> int:
         return 1
     nodes = json.loads(raw)["data"]["repository"]["issues"]["nodes"]
     print(render(build_rows(nodes, collaborators)))
-    # ponytail: first 100 issues, last 20 comments each; page if the board outgrows it.
     return 0
