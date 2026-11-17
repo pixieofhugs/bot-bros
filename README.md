@@ -32,10 +32,14 @@ thing you might type yourself is a GitHub login.
 | **bros** | `/bros:setup` — installs and configures the rest | v0 |
 | **hush** | Comment budget + PR-body budget. Agents stop narrating. | v0 |
 | **bouncer** | Merge guard (owner's PR, green checks, a review), protected paths, safe issue-comment reading, GitHub hardening audit | v0 |
-| **foreman** | The `reviewer` and `triage` agents, `bros merge`, `bros board`, and the `merge-bot`, `bug-bot` and `git-reaper` skills; planner → builder bots next | v0 |
+| **foreman** | The `reviewer` and `triage` agents, `bros merge`, `bros board`, and the `planner-bot`, `builder-bot`, `merge-bot`, `bug-bot` and `git-reaper` skills | v0 |
 | **squint** | Contrast (WCAG maths, design tokens, rendered pages), payload budget | planned |
 | **ratchet** (CLI) | Lint findings may only shrink: per file and rule, both ways, no cheating | v0 |
 | **snek / tsk** | Python / TypeScript rules and lint-on-edit | planned |
+
+foreman's bots are the generic loop. What only your repo knows (which writer agents own which
+files, how to shoot a UI change, where the ADRs live) goes in planning, build and merge notes
+that your `CLAUDE.md` routes to. A bot with no notes says what it skipped.
 
 ## How it's built
 

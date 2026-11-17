@@ -151,6 +151,12 @@ Rules and gates come from the Bot Bros plugins; project values live in `.bros.to
 Hand back with the last line of `bros check`.
 ```
 
+If foreman is on, add a row per notes file the repo has, or offer to start one. The bots run
+without them and say what they skipped: **planning notes** (glossary, ADRs, specs, how to
+render a question) for `/foreman:planner-bot`; **build notes** (writer agents and their files,
+the writer-rules file, how designs reach a writer) for `/foreman:builder-bot`; **merge notes**
+(how to shoot a UI change, what a merge deploys) for `/foreman:merge-bot`.
+
 ## 5. Harden GitHub
 
 Run `bros audit`. Show its list as is — ✓, ✗ with the fix, ? with why — and ask which

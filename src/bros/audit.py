@@ -19,6 +19,8 @@ LABELS = {
     "ready-for-agent": ("0e8a16", "Researched; an agent can build it"),
     "ready-for-human": ("fbca04", "Needs a human decision or hands"),
     "needs-design": ("c5def5", "Needs a design before it can be built"),
+    "deferred": ("bfd4f2", "Deliberately later"),
+    "epic": ("5319e7", "Tracks child issues; its state is theirs"),
     "wontfix": ("ffffff", "Will not be worked on"),
 }
 SHA = re.compile(r"@[0-9a-f]{40}\b")
