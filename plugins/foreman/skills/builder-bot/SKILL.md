@@ -216,7 +216,8 @@ One issue (or one coupled pair) per subagent.
   tool, so skills reach them through the writer-rules file the build notes name, or not at
   all. A scoped writer whose definition already loads it needs nothing added. A general
   dispatch has no such definition, so its prompt **opens** with this line, verbatim:
-  `Before anything else, Read <writer-rules file> in full and follow it.`
+  `Before anything else, Read <writer-rules file> in full and follow it.` With no
+  writer-rules file, leave the line out.
 - Each agent opens its own draft PR with `Closes #N` on its own line. On a split issue only
   the last PR carries `Closes`; earlier ones say `Part of #N`.
 - Every PR body ends with a **"What to eyeball"** list (`/foreman:merge-bot`'s *The merge loop* shoots and shows it)
@@ -233,7 +234,7 @@ why landing lives in its own skill.
 
 So dispatch **one wave** — everything that is not waiting on another PR in this batch — and
 when every agent in it has reported and its PR is open, write the hand-off, **in the main
-checkout** (it is gitignored, so `/foreman:merge-bot` sees only that copy), to
+checkout** (keep `.claude/reviews/` out of git, so `/foreman:merge-bot` sees only that copy), to
 `.claude/reviews/HANDOFF-<n>.md`, where `<n>` is the wave's lowest PR number — a new file
 for this wave, leaving every other hand-off as it is. It holds everything `/foreman:merge-bot`
 needs and cannot rederive:

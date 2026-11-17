@@ -33,7 +33,7 @@ notes → skip what needs them and say so.
    test — never for the identifier the issue invented. A miss on an invented name proves
    nothing.
 4. **Labels are yours; closes are the owner's.** Relabelling is cheap and reversible, so do it.
-   Closing is not: on a solo repo the owner filed most of these, and a close reads as
+   Closing is not: a close reads as
    *we have decided against this*. Every close goes to the owner first, with its evidence.
 
 **Applying a label needs no approval and never waits for the close-out.** Rule 4 grants it
@@ -294,12 +294,12 @@ rest are skipped in silence, not re-litigated.
 
 Age it by **when it was deferred**, not when it was filed. Step 1's `createdAt` and
 `updatedAt` are both wrong for this — a re-defer moves neither, so an issue the owner deliberately
-re-deferred last week reads as years stale. The label was once spelled `differed`, and the
-events history keeps the old name, so the loop matches both. Run the events loop:
+re-deferred last week reads as years stale. Run the events loop (add any old spelling of the
+label the planning notes name to the `select`):
 
 ```
 for n in $(gh issue list --label deferred --state open --limit 100 --json number --jq '.[].number'); do
-  d=$(gh api repos/{owner}/{repo}/issues/$n/events --jq '[.[]|select(.event=="labeled" and (.label.name=="deferred" or .label.name=="differed"))|.created_at]|last')
+  d=$(gh api repos/{owner}/{repo}/issues/$n/events --jq '[.[]|select(.event=="labeled" and .label.name=="deferred")|.created_at]|last')
   echo "$n $d"
 done
 ```
