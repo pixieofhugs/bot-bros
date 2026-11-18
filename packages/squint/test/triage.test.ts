@@ -1,6 +1,5 @@
 /**
- * The contrast triage policy, pure so a PR can test what the nightly
- * `e2e/contrast.spec.ts` decides. `background === null` means "could not
+ * The contrast triage policy, pure so a unit test can pin what a rendered sweep decides. `background === null` means "could not
  * resolve", NOT 0:1.
  */
 import { describe, it } from "node:test";
@@ -46,7 +45,7 @@ function unresolved(css: string, overrides: Partial<Finding> = {}): Finding {
 
 /** A paper-stock ramp. */
 const PAPER_RAMP = "linear-gradient(180deg, rgb(253, 246, 234) 0%, rgb(236, 228, 210) 100%)";
-/** The unaffiliated spectrum, in miniature. */
+/** A rainbow spectrum, in miniature. */
 const RAINBOW = "linear-gradient(90deg, rgb(193, 39, 45) 0%, rgb(202, 138, 4) 50%, rgb(37, 99, 235) 100%)";
 /** Translucent wash over an opaque white ramp. */
 const WASHED_PAPER =
@@ -115,7 +114,7 @@ describe("triageFindings", () => {
     expect(stale).toHaveLength(0);
   });
 
-  it("fails an allowlisted pairing that now clears AA — the list only shrinks", () => {
+  it("reports an allowlisted pairing that now clears AA as stale — the list only shrinks", () => {
     const fixed = { ...allowlisted, ratio: allowlisted.required + 0.5 };
     const { failures, stale } = triageFindings(allowedTheme, [fixed], BASELINE);
 
@@ -249,7 +248,7 @@ describe("triageFindings over a decorative fill", () => {
     // Only a MEASURED pairing may consult the allowlist.
     const { failures, stale, unmeasurable } = triageFindings(allowedTheme, [
       { ...unresolved(STRADDLE(45)), text: allowedText, background: null },
-    ]);
+    ], BASELINE);
 
     expect(failures).toHaveLength(0);
     expect(stale).toHaveLength(0);
