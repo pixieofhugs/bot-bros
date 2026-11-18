@@ -33,7 +33,7 @@ thing you might type yourself is a GitHub login.
 | **hush** | Comment budget + PR-body budget. Agents stop narrating. | v0 |
 | **bouncer** | Merge guard (owner's PR, green checks, a review), protected paths, safe issue-comment reading, GitHub hardening audit | v0 |
 | **foreman** | The `reviewer` and `triage` agents, `bros merge`, `bros board`, and the `planner-bot`, `builder-bot`, `merge-bot`, `bug-bot` and `git-reaper` skills | v0 |
-| **squint** | Contrast (WCAG maths, design tokens, rendered pages), payload budget | planned |
+| **squint** | The `/squint:squint` skill (contrast, design fidelity, payload budget) and the [`@pixieofhugs/squint`](packages/squint) npm package: WCAG maths, CSS vars per theme, a rendered-page scanner | v0 |
 | **ratchet** (CLI) | Lint findings may only shrink: per file and rule, both ways, no cheating | v0 |
 | **snek / tsk** | Python / TypeScript rules and lint-on-edit | planned |
 
@@ -83,6 +83,7 @@ another agent, or a person. The Claude-specific parts are thin wrappers around i
 
 `bros check --all` runs everything CI runs: the suite (including an end-to-end run against `tests/fixture/` — a
 tiny Python + TypeScript project that stands in for "some other repo" so nothing
-project-specific sneaks into a rule), the scrub, the ruff ratchet and the comment budget.
+project-specific sneaks into a rule), the scrub, the ruff ratchet, the comment budget and the
+squint package's tests.
 
 MIT licensed.
