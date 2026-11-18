@@ -1,0 +1,7 @@
+{
+  "name": "squint",
+  "version": "0.1.0",
+  "description": "Contrast that fails loudly, designs that keep their shape, pages that stay fast.",
+  "author": { "name": "pixieofhugs", "url": "https://github.com/pixieofhugs" },
+  "license": "MIT"
+}

@@ -5,6 +5,10 @@ name = "pytest"
 run = "uvx --with pytest pytest -q"
 
 [[check]]
+name = "squint"
+run = "cd packages/squint && npm ci --silent && npm run build --silent && npm test --silent"
+
+[[check]]
 name = "scrub"
 run = "bros scrub"
 

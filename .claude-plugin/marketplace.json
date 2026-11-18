@@ -30,6 +30,12 @@
       "source": "./plugins/foreman",
       "description": "Runs the crew: plan, triage, build, review, merge, bug intake and git cleanup.",
       "category": "productivity"
+    },
+    {
+      "name": "squint",
+      "source": "./plugins/squint",
+      "description": "Contrast that fails loudly, designs that keep their shape, pages that stay fast.",
+      "category": "productivity"
     }
   ]
 }
