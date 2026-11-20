@@ -25,7 +25,7 @@ def test_checks_state_reads_absent_as_pending_and_failure_as_failed():
     )
 
 
-def _wire(monkeypatch, tmp_path, author=OWNER, decide=None, behind=()):
+def _wire(monkeypatch, tmp_path, author=OWNER, decide=None, behind=(), strict=True):
     """Stub every `gh` call; return the commands shelled out."""
     ran: list[str] = []
     behind = iter(behind)
@@ -47,7 +47,8 @@ def _wire(monkeypatch, tmp_path, author=OWNER, decide=None, behind=()):
             "baseRefName": "main",
         },
     )
-    monkeypatch.setattr(merge_pr, "_update_branch", lambda n, view: None)
+    monkeypatch.setattr(merge_pr, "_strict", lambda base: strict)
+    monkeypatch.setattr(merge_pr, "_update_branch", lambda n, view: ran.append("update"))
     monkeypatch.setattr(merge_pr, "_behind", lambda view: next(behind, False))
     monkeypatch.setattr(merge_pr, "_unreviewed", lambda reviewed, head, base: [])
     monkeypatch.setattr(merge_pr, "_resolve_commit", lambda sha: sha)
@@ -121,6 +122,15 @@ def test_green_does_not_count_while_the_base_keeps_moving(monkeypatch, tmp_path)
     code, message = merge_pr.land("7")
     assert code == merge_pr.BLOCKED and "moved under it" in message
     assert not any("merge" in command for command in ran)
+
+
+def test_without_strict_protection_a_behind_head_merges_unupdated(monkeypatch, tmp_path):
+    (tmp_path / ".claude" / "reviews").mkdir(parents=True)
+    (tmp_path / ".claude" / "reviews" / "7.md").write_text(CLEAN_REVIEW)
+
+    ran = _wire(monkeypatch, tmp_path, decide=lambda p: None, behind=[True] * 9, strict=False)
+    assert merge_pr.land("7")[0] == merge_pr.MERGED
+    assert "update" not in ran
 
 
 def test_a_pr_goes_after_what_its_handoff_names_and_only_then(monkeypatch, tmp_path):

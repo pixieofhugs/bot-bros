@@ -1,4 +1,4 @@
-"""Land one PR: ready it, update it, wait for green, gate it, merge it.
+"""Land one PR: ready it, update it (strict protection only), wait for green, gate it, merge it.
 
 A merge's mechanics in one process instead of five model turns. This command's
 `gh pr merge` is a subprocess the PreToolUse hook never sees, so it calls the
@@ -92,6 +92,15 @@ def _behind(view: dict) -> bool:
         ".behind_by",
     ).strip()
     return behind != "0"
+
+
+def _strict(base: str) -> bool:
+    """Whether protection requires the head to be up to date with `base`."""
+    repo = guard._gh("repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner").strip()
+    return guard._gh(
+        "api", f"repos/{repo}/branches/{base}/protection/required_status_checks",
+        "--jq", ".strict",
+    ).strip() == "true"  # fmt: skip
 
 
 def _update_branch(number: str, view: dict) -> None:
@@ -269,15 +278,18 @@ def land(number: str, say=lambda _: None) -> tuple[int, str]:
         say("marking ready")
         guard._gh("pr", "ready", number)
 
-    # The base moves under CI (parallel merges) and protection refuses a behind
-    # head, so green counts only if still level with the base afterwards.
+    # Strict protection refuses a behind head, and the base moves under CI
+    # (parallel merges), so green counts only if still level afterwards. Without
+    # strict, a behind head merges: updating would buy a full CI run per PR.
+    strict = _strict(pull_request.base_ref)
     for _ in range(UPDATE_ROUNDS):
         say("waiting for checks")
-        _update_branch(number, _view(number))
+        if strict:
+            _update_branch(number, _view(number))
         reason = _wait_for_green(number, root)
         if reason:
             return BLOCKED, f"PR #{number}: {reason}"
-        if not _behind(_view(number)):
+        if not strict or not _behind(_view(number)):
             break
     else:
         return BLOCKED, (

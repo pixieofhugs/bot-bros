@@ -100,12 +100,14 @@ wrapper drops comments from non-collaborators.
 > on a machine that holds secrets. A bot's PR (Dependabot) is landed by re-opening its change
 > as an owner-authored PR, never by merging the bot's own.
 
-Branch protection forces merges to **serialize**. Per PR, in order — and **only when the PR
-is next in line**, because the command updates the branch, and every merge re-invalidates
-every other open PR (updating eagerly wastes a full CI cycle):
+Merges **serialize**. Per PR, in order — and **only when the PR is next in line**: under
+strict protection ("require branches to be up to date") the command updates the branch,
+and every merge re-invalidates every other open PR (updating eagerly wastes a full CI
+cycle). Without strict, a green PR merges behind the base with no new CI run, so check
+the default branch's own run after the batch (Step 5):
 
 1. **Start the mechanics, in the background:** `bros merge <N>`. One call marks the PR
-   ready, updates the branch if it is behind, waits for the required checks on the
+   ready, updates the branch if it is behind and protection is strict, waits for the required checks on the
    *current* head, and — once a review clears this head — merges with `--squash
    --delete-branch`. A review clears a head when its first line names a commit nothing but
    `update-branch` merges have followed, and says `blocking=0`. Do not run `gh pr ready` /
