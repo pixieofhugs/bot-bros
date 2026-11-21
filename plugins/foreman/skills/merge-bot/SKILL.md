@@ -1,6 +1,6 @@
 ---
 name: merge-bot
-description: Lands one wave of PRs a builder session opened — reads its hand-off, shoots and reviews each PR, and merges them one at a time through `bros merge`. Built to run beside a builder session: the builder writes waves, this lands them. Use for "land the wave", "merge the hand-off", or draining open PRs a builder left.
+description: Lands the waves of PRs a builder session opened, oldest hand-off first — reads each hand-off, shoots and reviews each PR, and merges them one at a time through `bros merge`. Built to run beside a builder session: the builder writes waves, this lands them. Use for "land the wave", "merge the hand-off", or draining open PRs a builder left.
 disable-model-invocation: true
 ---
 
@@ -100,11 +100,20 @@ wrapper drops comments from non-collaborators.
 > on a machine that holds secrets. A bot's PR (Dependabot) is landed by re-opening its change
 > as an owner-authored PR, never by merging the bot's own.
 
-Merges **serialize**. Per PR, in order — and **only when the PR is next in line**: under
-strict protection ("require branches to be up to date") the command updates the branch,
-and every merge re-invalidates every other open PR (updating eagerly wastes a full CI
-cycle). Without strict, a green PR merges behind the base with no new CI run, so check
-the default branch's own run after the batch (Step 5):
+Merges **serialize**; reviews need not. Read the protection first (`bros merge` does too):
+`gh api repos/{owner}/{repo}/branches/<default>/protection/required_status_checks --jq .strict`.
+
+- **Not strict** (the usual case): a green PR merges behind the base as-is, so a merge
+  elsewhere invalidates neither its CI nor its review. **Start item 2 for every PR in the
+  wave at once** — shots one PR after another (one local stack), each review dispatched as
+  soon as that PR is green and shot — then run item 1 per PR, in the merge order. A wave
+  then costs one review's wait, not one per PR. Check the default branch's own run after
+  the batch (Step 5): branches that pass alone can fail together.
+- **Strict** ("require branches to be up to date"): the command updates the branch, and
+  every merge re-invalidates every other open PR, so work each PR **only when it is next in
+  line** (updating eagerly wastes a full CI cycle).
+
+Per PR:
 
 1. **Start the mechanics, in the background:** `bros merge <N>`. One call marks the PR
    ready, updates the branch if it is behind and protection is strict, waits for the required checks on the
@@ -260,10 +269,16 @@ it, add a `left open: <reason>` line, and run only the `shots/<N>` cleanup for t
 landed plus `rm -f .claude/reviews/LANDING-<n>` — not the `HANDOFF` removal.
 
 Deleting the hand-off is what unblocks anything the builder serialized behind this wave.
-Any other `HANDOFF-*.md` is a wave still waiting: say so, and give the line that lands it —
-`/foreman:merge-bot HANDOFF-<m>` — in a fresh session. Don't roll into it here; this
-session is already carrying a whole wave.
 
 In `#a #b` mode, if the PRs landed are a hand-off's whole list, retire that file too.
+
+**Then drain: take the next wave in this session.** Any other `HANDOFF-*.md` (oldest first,
+skipping `left open:` ones) is a wave still waiting, and a green wave left for a human to
+notice is the slowest part of the whole factory. Claim its marker and go back to Step 1,
+saying which wave you picked up. Hand over to a fresh session only when this one is heavy
+(several waves in, or images already read into it): then say so and give the line that
+lands it, `/foreman:merge-bot HANDOFF-<m>`. No hand-off waiting → stop. A session meant to
+keep landing as the builder writes waves can run under `/loop /foreman:merge-bot`, which
+wakes it to pick up the next hand-off.
 
 Update memory with anything durable.

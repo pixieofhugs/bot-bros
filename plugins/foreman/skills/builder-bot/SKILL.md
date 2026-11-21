@@ -334,7 +334,8 @@ Report: the hand-off you wrote, PR → issue for each, every rung-zero verdict i
 CLOSE and DEFER ones, what got corrected mid-flight, and anything owed to the user.
 
 Then give the line that lands it, in a **separate** session: `/foreman:merge-bot HANDOFF-<n>`. If a
-`/foreman:merge-bot` is already landing another wave, it says so and stops; start this one after.
+`/foreman:merge-bot` is already landing another wave (a `LANDING-*` marker), it picks this
+hand-off up itself when that wave closes; say so instead of asking for a second session.
 Do not run the merge loop here.
 
 If the queue still holds work that is not serialized behind a wave in flight, say so: a
