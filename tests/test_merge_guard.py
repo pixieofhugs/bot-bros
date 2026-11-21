@@ -29,12 +29,14 @@ def a_pull_request(
     author: str = OWNER,
     head_owner: str = OWNER,
     checks: dict[str, str] | None = None,
+    author_admin: bool = False,
 ) -> guard_pr_merge.PullRequest:
     return guard_pr_merge.PullRequest(
         author=author,
         head_owner=head_owner,
         base_ref="main",
         checks=dict(ALL_GREEN if checks is None else checks),
+        author_admin=author_admin,
     )
 
 
@@ -71,6 +73,17 @@ def test_a_pr_that_is_not_ours_is_denied(author, head_owner, review):
     reason = reason_for(a_pull_request(author=author, head_owner=head_owner), review)
     assert reason is not None
     assert "stranger's branch" in reason
+
+
+def test_an_org_admins_branch_is_ours(review):
+    """On an org-owned repo the author is a person, never the org."""
+    pr = a_pull_request(author="an-admin", head_owner=OWNER, author_admin=True)
+    assert reason_for(pr, review) is None
+
+
+def test_an_org_admin_on_a_fork_is_still_a_stranger(review):
+    pr = a_pull_request(author="an-admin", head_owner="an-admin", author_admin=True)
+    assert "stranger's branch" in (reason_for(pr, review) or "")
 
 
 def test_ownership_is_checked_before_anything_else(tmp_path):

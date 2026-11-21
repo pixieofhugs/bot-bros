@@ -10,8 +10,8 @@ whether to follow it.
 
 The three gates, in the order they are checked:
 
-1. **Ownership.** The PR's author *and* its head repository owner must both be
-   the owner of this repo. On a public repo a fork's branch is a stranger's
+1. **Ownership.** The PR's head repository owner must be the owner of this
+   repo, and its author must be that owner or, on an org-owned repo, an admin. On a public repo a fork's branch is a stranger's
    code, and merging it is a deploy. Checked first, because the rule for such a
    PR is not only "do not merge it" but "do not check it out or run its gates",
    so nothing else should run against a PR that fails here.
@@ -81,6 +81,14 @@ class PullRequest:
     base_ref: str
     #: check name -> conclusion, upper-cased, for the current head commit only
     checks: dict[str, str]
+    #: the author holds admin on this repo (how an org-owned repo names its owner)
+    author_admin: bool = False
+
+    def is_ours(self, repo_owner: str) -> bool:
+        """Our branch (not a fork), written by the owner or a repo admin."""
+        return self.head_owner == repo_owner and (
+            self.author == repo_owner or self.author_admin
+        )
 
 
 def merge_arguments(tool_name: str, command: str) -> list[str]:
@@ -108,7 +116,7 @@ def blocking_reason(
     Pure: every fact it needs is an argument, so the decision is testable
     without a network, a repo, or a GitHub account.
     """
-    if pull_request.author != repo_owner or pull_request.head_owner != repo_owner:
+    if not pull_request.is_ours(repo_owner):
         return (
             f"PR #{number} was authored by `{pull_request.author}` from "
             f"`{pull_request.head_owner}`, not `{repo_owner}`. This repo is "
@@ -191,11 +199,24 @@ def _fetch(number: str, project_root: Path) -> tuple[PullRequest, str, list[str]
             "author,headRepositoryOwner,baseRefName,statusCheckRollup",
         )
     )
+    author = str((raw.get("author") or {}).get("login", ""))
+    head_owner = str((raw.get("headRepositoryOwner") or {}).get("login", ""))
+    author_admin = False
+    if author and author != owner and head_owner == owner:
+        # An org authors no PRs; on an org-owned repo its admins are the owner.
+        permission = _gh(
+            "api",
+            f"repos/{owner}/{repo['name']}/collaborators/{author}/permission",
+            "--jq",
+            ".permission",
+        ).strip()
+        author_admin = permission == "admin"
     pull_request = PullRequest(
-        author=str((raw.get("author") or {}).get("login", "")),
-        head_owner=str((raw.get("headRepositoryOwner") or {}).get("login", "")),
+        author=author,
+        head_owner=head_owner,
         base_ref=str(raw.get("baseRefName", "")),
         checks=_rollup(raw.get("statusCheckRollup")),
+        author_admin=author_admin,
     )
 
     contexts = json.loads(
