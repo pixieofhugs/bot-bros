@@ -292,3 +292,57 @@ def test_bros_guard_merge_runs_this_file() -> None:
     decision = json.loads(out.stdout)["hookSpecificOutput"]
     assert decision["permissionDecision"] == "deny"
     assert "exactly one PR number" in decision["permissionDecisionReason"]
+
+
+# _fetch: the admin lookup
+
+
+def _stub_gh(monkeypatch, author, head_owner, permission):
+    calls = []
+
+    def fake(*arguments):
+        calls.append(arguments)
+        if arguments[:2] == ("repo", "view"):
+            return json.dumps({"owner": {"login": OWNER}, "name": "r"})
+        if arguments[:2] == ("pr", "view"):
+            return json.dumps(
+                {
+                    "author": {"login": author},
+                    "headRepositoryOwner": {"login": head_owner},
+                    "baseRefName": "main",
+                    "statusCheckRollup": [],
+                }
+            )
+        if "permission" in arguments[1]:
+            if isinstance(permission, Exception):
+                raise permission
+            return permission + "\n"
+        return json.dumps(["test"])
+
+    monkeypatch.setattr(guard_pr_merge, "_gh", fake)
+    return calls
+
+
+@pytest.mark.parametrize(
+    ("permission", "admin"), [("admin", True), ("maintain", False), ("write", False)]
+)
+def test_only_admin_permission_makes_an_author_ours(monkeypatch, tmp_path, permission, admin):
+    _stub_gh(monkeypatch, "a-person", OWNER, permission)
+    pull_request, _, _ = guard_pr_merge._fetch("1", tmp_path)
+    assert pull_request.author_admin is admin
+
+
+@pytest.mark.parametrize(("author", "head_owner"), [(OWNER, OWNER), ("a-person", "a-person")])
+def test_no_permission_lookup_for_the_owner_or_a_fork(monkeypatch, tmp_path, author, head_owner):
+    calls = _stub_gh(monkeypatch, author, head_owner, RuntimeError("must not be called"))
+    pull_request, _, _ = guard_pr_merge._fetch("1", tmp_path)
+    assert not pull_request.author_admin
+    assert not any("permission" in str(c) for c in calls)
+
+
+def test_a_failed_permission_lookup_denies(monkeypatch):
+    _stub_gh(monkeypatch, "a-person", OWNER, RuntimeError("gh api failed"))
+    reason = guard_pr_merge.decide(
+        {"tool_name": "Bash", "tool_input": {"command": "gh pr merge 1 --squash"}}
+    )
+    assert reason is not None and "Could not establish" in reason

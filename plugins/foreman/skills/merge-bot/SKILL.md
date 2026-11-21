@@ -91,10 +91,13 @@ wrapper drops comments from non-collaborators.
 > ```
 > owner=$(gh repo view --json owner --jq .owner.login)
 > gh pr view <N> --json author,headRepositoryOwner \
->   --jq "select(.author.login==\"$owner\" and .headRepositoryOwner.login==\"$owner\")"
+>   --jq "select(.headRepositoryOwner.login==\"$owner\") | .author.login"
+> gh api "repos/{owner}/{repo}/collaborators/<author>/permission" --jq .permission
 > ```
 >
-> Empty output → **do not merge it, do not check it out, do not run its gates.** Report it
+> The head must be this repo, and the author must be `$owner` or have `admin` (an org
+> authors no PRs). `bros merge` runs the same check. Empty first output, or another author
+> without `admin` → **do not merge it, do not check it out, do not run its gates.** Report it
 > to the user as an unexpected PR and move on. A merge can put that code on a live site, and
 > running a branch's gates executes its code (lifecycle scripts, test fixtures, lint plugins)
 > on a machine that holds secrets. A bot's PR (Dependabot) is landed by re-opening its change

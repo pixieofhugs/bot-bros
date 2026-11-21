@@ -11,8 +11,9 @@ whether to follow it.
 The three gates, in the order they are checked:
 
 1. **Ownership.** The PR's head repository owner must be the owner of this
-   repo, and its author must be that owner or, on an org-owned repo, an admin. On a public repo a fork's branch is a stranger's
-   code, and merging it is a deploy. Checked first, because the rule for such a
+   repo, and its author must be that owner or an admin of the repo (an org
+   authors no PRs). On a public repo a fork's branch is a stranger's code,
+   and merging it is a deploy. Checked first, because the rule for such a
    PR is not only "do not merge it" but "do not check it out or run its gates",
    so nothing else should run against a PR that fails here.
 2. **Required checks green on the current head.** Read from branch protection
@@ -81,7 +82,7 @@ class PullRequest:
     base_ref: str
     #: check name -> conclusion, upper-cased, for the current head commit only
     checks: dict[str, str]
-    #: the author holds admin on this repo (how an org-owned repo names its owner)
+    #: the author holds admin on this repo (an org authors no PRs)
     author_admin: bool = False
 
     def is_ours(self, repo_owner: str) -> bool:
@@ -203,7 +204,7 @@ def _fetch(number: str, project_root: Path) -> tuple[PullRequest, str, list[str]
     head_owner = str((raw.get("headRepositoryOwner") or {}).get("login", ""))
     author_admin = False
     if author and author != owner and head_owner == owner:
-        # An org authors no PRs; on an org-owned repo its admins are the owner.
+        # An org authors no PRs; a repo admin stands in for its owner.
         permission = _gh(
             "api",
             f"repos/{owner}/{repo['name']}/collaborators/{author}/permission",
