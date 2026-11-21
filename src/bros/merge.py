@@ -249,7 +249,7 @@ def land(number: str, say=lambda _: None) -> tuple[int, str]:
     review = root / guard.REVIEW_DIR / f"{number}.md"
 
     pull_request, owner, _ = guard._fetch(number, root)
-    if pull_request.author != owner or pull_request.head_owner != owner:
+    if not pull_request.is_ours(owner):
         return BLOCKED, guard.blocking_reason(number, pull_request, owner, [], review) or ""
 
     view = _view(number)

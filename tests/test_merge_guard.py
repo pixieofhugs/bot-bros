@@ -29,12 +29,14 @@ def a_pull_request(
     author: str = OWNER,
     head_owner: str = OWNER,
     checks: dict[str, str] | None = None,
+    author_admin: bool = False,
 ) -> guard_pr_merge.PullRequest:
     return guard_pr_merge.PullRequest(
         author=author,
         head_owner=head_owner,
         base_ref="main",
         checks=dict(ALL_GREEN if checks is None else checks),
+        author_admin=author_admin,
     )
 
 
@@ -71,6 +73,17 @@ def test_a_pr_that_is_not_ours_is_denied(author, head_owner, review):
     reason = reason_for(a_pull_request(author=author, head_owner=head_owner), review)
     assert reason is not None
     assert "stranger's branch" in reason
+
+
+def test_an_org_admins_branch_is_ours(review):
+    """On an org-owned repo the author is a person, never the org."""
+    pr = a_pull_request(author="an-admin", head_owner=OWNER, author_admin=True)
+    assert reason_for(pr, review) is None
+
+
+def test_an_org_admin_on_a_fork_is_still_a_stranger(review):
+    pr = a_pull_request(author="an-admin", head_owner="an-admin", author_admin=True)
+    assert "stranger's branch" in (reason_for(pr, review) or "")
 
 
 def test_ownership_is_checked_before_anything_else(tmp_path):
@@ -279,3 +292,57 @@ def test_bros_guard_merge_runs_this_file() -> None:
     decision = json.loads(out.stdout)["hookSpecificOutput"]
     assert decision["permissionDecision"] == "deny"
     assert "exactly one PR number" in decision["permissionDecisionReason"]
+
+
+# _fetch: the admin lookup
+
+
+def _stub_gh(monkeypatch, author, head_owner, permission):
+    calls = []
+
+    def fake(*arguments):
+        calls.append(arguments)
+        if arguments[:2] == ("repo", "view"):
+            return json.dumps({"owner": {"login": OWNER}, "name": "r"})
+        if arguments[:2] == ("pr", "view"):
+            return json.dumps(
+                {
+                    "author": {"login": author},
+                    "headRepositoryOwner": {"login": head_owner},
+                    "baseRefName": "main",
+                    "statusCheckRollup": [],
+                }
+            )
+        if "permission" in arguments[1]:
+            if isinstance(permission, Exception):
+                raise permission
+            return permission + "\n"
+        return json.dumps(["test"])
+
+    monkeypatch.setattr(guard_pr_merge, "_gh", fake)
+    return calls
+
+
+@pytest.mark.parametrize(
+    ("permission", "admin"), [("admin", True), ("maintain", False), ("write", False)]
+)
+def test_only_admin_permission_makes_an_author_ours(monkeypatch, tmp_path, permission, admin):
+    _stub_gh(monkeypatch, "a-person", OWNER, permission)
+    pull_request, _, _ = guard_pr_merge._fetch("1", tmp_path)
+    assert pull_request.author_admin is admin
+
+
+@pytest.mark.parametrize(("author", "head_owner"), [(OWNER, OWNER), ("a-person", "a-person")])
+def test_no_permission_lookup_for_the_owner_or_a_fork(monkeypatch, tmp_path, author, head_owner):
+    calls = _stub_gh(monkeypatch, author, head_owner, RuntimeError("must not be called"))
+    pull_request, _, _ = guard_pr_merge._fetch("1", tmp_path)
+    assert not pull_request.author_admin
+    assert not any("permission" in str(c) for c in calls)
+
+
+def test_a_failed_permission_lookup_denies(monkeypatch):
+    _stub_gh(monkeypatch, "a-person", OWNER, RuntimeError("gh api failed"))
+    reason = guard_pr_merge.decide(
+        {"tool_name": "Bash", "tool_input": {"command": "gh pr merge 1 --squash"}}
+    )
+    assert reason is not None and "Could not establish" in reason

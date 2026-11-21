@@ -1,6 +1,6 @@
 {
   "name": "bouncer",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Merge guard, protected paths, safe issue-comment reading, GitHub hardening. Decides who gets in.",
   "author": {
     "name": "pixieofhugs",
